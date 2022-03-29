@@ -57,19 +57,22 @@ infected_patch = mPatches.Patch(color="red", label="Infected")
 # function to plot population
 
 
-def plotPopulation(population, title):
+def plotPopulation(population, title, gamma, iteration):
     plt.figure(1)
     plt.title(title)
     plt.legend(handles=[infected_patch, susceptible_patch], loc="lower left")
     plt.imshow(population, vmin=0, vmax=len(cmap.colors), cmap=cmap)
     plt.yticks(color="w")
     plt.show()
+    #plt.savefig(f"{gamma}_{iteration}.png")
 
-
+gamma = 0.3
 plt.ion()
-for i in range():
-    population = updateState(population, .6)
-    plotPopulation(population, "test")
+for i in range(100):
+    population = updateState(population, gamma)
+    plotPopulation(population, f"Gamma: {gamma}. Iteration: {i}", gamma, i)
+    #if i in [10,30,60,90]:
+        #plotPopulation(population, f"Gamma: {gamma}. Iteration: {i}", gamma, i)
     plt.pause(.5)
 
 
