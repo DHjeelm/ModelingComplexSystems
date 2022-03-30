@@ -10,7 +10,6 @@ import time
 
 
 # Define grid size
-N = 100
 
 
 def initializePopulation(N: int):
@@ -21,7 +20,7 @@ def initializePopulation(N: int):
     return population
 
 
-def updateState(population, gamma):
+def updateState(population, gamma: float, N: int):
     newState = copy.deepcopy(population)
 
     for i in range(len(population[0])):
@@ -56,6 +55,7 @@ def plotPopulation(population, title, gamma, iteration):
 
 
 if __name__ == "__main__":
+    N = 100
     population = initializePopulation(N)
 
     print(population)
