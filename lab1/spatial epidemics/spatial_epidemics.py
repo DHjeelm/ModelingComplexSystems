@@ -44,14 +44,13 @@ def updateState(population, gamma: float, N: int):
     return newState
 
 
-def plotPopulation(population, title, gamma, iteration):
+def plotPopulation(population, title):
     plt.figure(1)
     plt.title(title)
     plt.legend(handles=[infected_patch, susceptible_patch], loc="lower left")
     plt.imshow(population, vmin=0, vmax=len(cmap.colors), cmap=cmap)
     plt.yticks(color="w")
     plt.show()
-    # plt.savefig(f"{gamma}_{iteration}.png")
 
 
 if __name__ == "__main__":
