@@ -3,9 +3,10 @@ import numpy as np
 from random import random
 
 
+
+# Initialize population where each population has a probability p of being infected
 def initRandomPopulation(N: int, p: float) -> np.array:
     pop = np.zeros((1, N))
-
     for i in range(N):
         if random() <= p:
             pop[0, i] = 1
@@ -16,42 +17,53 @@ def initRandomPopulation(N: int, p: float) -> np.array:
 
 
 if __name__ == "__main__":
+
+    # Define parameters
     N = 100
-    nSimulations = 100
+    nSimulations = 10
+    nStepsGammaP = 200
+    nSteps = 50
 
 
-    stepSizeGammaP = 100
-    nSteps = 100
-    survivalCounts = np.zeros(1, stepSizeGammaP**2)
-
-    gammaPSurface = np.zeros(3, stepSizeGammaP)
-    gammas = np.linspace(0, 1, stepSizeGammaP)
-    ps = np.linspace(0, 1, stepSizeGammaP)
-
-    gammaPSurface[0, :] = gammas
-    gammaPSurface[1, :] = ps
+    survivalCounts = np.zeros((1, nStepsGammaP**2))
+    gammaPSurface = np.zeros((nStepsGammaP, nStepsGammaP))
+    gammas = np.linspace(0, 1, nStepsGammaP)
+    ps = np.linspace(0, 1, nStepsGammaP)
 
 
-
-
-    for i in range(stepSizeGammaP):
-        # Change gamma
+    # Loop over gamma
+    for i in range(nStepsGammaP):
 
         g = gammas[i]
-        for j in range(stepSizeGammaP):
-            # Change p
+
+        # Loop over p
+        for j in range(nStepsGammaP):
             p = ps[j]
             survivalCount = 0
             
+            # Simulate
             for k in range(nSimulations):
                 population = initRandomPopulation(N, p)
                 for h in range(nSteps):
-                    population = updateState(population, g)
+                    population = updateState(population, g, N)
 
+                # Check any survivors after nSteps
                 if np.any(population[0, :]):
                     survivalCount += 1
 
-            gammaPSurface[3, ] = survivalCount/nSimulations
+            # Add survivor percentage
+            gammaPSurface[i, j] = survivalCount/nSimulations
+
+    print(gammas)
+    print(ps)
+    print(gammaPSurface)
+    gammas, ps = np.meshgrid(gammas, ps, indexing="ij")
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    surf = ax.plot_surface(gammas, ps, gammaPSurface)
+    plt.xlabel("gamma")
+    plt.ylabel("p")
+
+    plt.show()
 
                 
         
