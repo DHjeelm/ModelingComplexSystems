@@ -114,12 +114,15 @@ if __name__ == "__main__":
 
 
     # Set simulation parameters:
-    p = 0.001
-    q = 0.01
-    r = 0.01
+    p = 0.1
+    q = 0
+    r = 0
     numberOfSimulations = 20
 
-
+    plt.ion()
     for i in range(numberOfSimulations):
         population = updatePopulation(population, p, q, r)
+        plt.close()
         plotPopulation(population, f"Population at time step {i+1}")
+        plt.show()
+        plt.pause(0.01)
