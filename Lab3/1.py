@@ -8,9 +8,10 @@ import matplotlib.patches as mPatches
 import random
 
 
-# 0: Resting
-# 1: Sharing
-# 2: Bored
+# State to number representation
+resting = 0
+sharer = 1
+bored = 2
 
 # Initiliaze population
 def initialiazePopulation(N: int):
@@ -42,25 +43,25 @@ def updatePopulation(population, p, q, r):
     for i in range(len(population[0])):
 
         # Resting rule
-        if population[0, i] == 0 and random.random() <= p:
+        if population[:, i] == resting and random.random() <= p:
             # Resting becomes sharing
-            newState[0, i] = 1
+            newState[:, i] = sharer
             continue
 
-        # Sharing rule
-        if population[0, i] == 1 and random.random() <= q:
+        # Sharer rule
+        if population[:, i] == sharer and random.random() <= q:
 
             # Pick random person
             randomPerson = random.sample(range(1, N), 1)
 
             # If that person is resting the they will now become a sharer
-            if population[0, randomPerson] == 0:
-                newState[0, randomPerson] = 1
+            if population[:, randomPerson] == resting:
+                newState[:, randomPerson] = sharer
                 continue
 
             # However, if the person they pick is bored, then the sharer will lose interest and become bored too.
-            elif population[0, randomPerson] == 2:
-                newState[0, i] = 2
+            elif population[:, randomPerson] == bored:
+                newState[:, i] = bored
                 continue
             
             # Else the person is sharing and we do nothing
@@ -68,18 +69,18 @@ def updatePopulation(population, p, q, r):
                 continue
 
         # Bored rule
-        if population[0, i] == 1 and random.random() <= r:
+        if population[:, i] == bored and random.random() <= r:
 
             # Pick random person
             randomPerson = random.sample(range(1, N), 1)
 
             # If that person is resting then the bored person will now become resting
-            if population[0, randomPerson] == 0:
-                newState[0, i] = 0
+            if population[:, randomPerson] == resting:
+                newState[:, i] = resting
 
             # Otherwise they will continue to be bored.
             else:
-                newState[0, i] = 2
+                newState[:, i] = bored
 
     return newState
 
@@ -93,10 +94,13 @@ boring_patch = mPatches.Patch(color="red", label="Bored")
 
 # Function for plotting
 def plotPopulation(population, title):
-    plt.figure(1)
+    populationToPlot =  np.zeros((10, 100), dtype=int)
+    for i in range(10):
+        populationToPlot[i, :] = population[0, i*100:(i+1)*100]
+    plt.figure(1, figsize=(12,8))
     plt.title(title)
     plt.legend(handles=[boring_patch, sharing_patch, resting_patch], loc="lower left")
-    plt.imshow(population, vmin=0, vmax=len(cmap.colors), cmap=cmap)
+    plt.imshow(populationToPlot, vmin=0, vmax=len(cmap.colors), cmap=cmap)
     plt.yticks(color="w")
     plt.show()
 
@@ -104,16 +108,16 @@ def plotPopulation(population, title):
 if __name__ == "__main__":
 
     # Initialize population
-    N = 100
+    N = 1000
     population = initialiazePopulation(N)
     plotPopulation(population, f"Initial state")
 
 
     # Set simulation parameters:
-    p = 0.01
-    q = 0.5
-    r = 0.5
-    numberOfSimulations = 2
+    p = 0.001
+    q = 0.01
+    r = 0.01
+    numberOfSimulations = 20
 
 
     for i in range(numberOfSimulations):
