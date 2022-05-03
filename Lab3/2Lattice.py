@@ -26,7 +26,7 @@ def initialiazePopulation(N: int):
     population = np.zeros((N, N), dtype=int)
 
 
-    # Pick two random people
+    # Pick two random indices
     randomPeople = random.sample(range(1, N), 4)
 
     # Set one to sharing
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     p = 0
     q = 0.5
     r = 0.5
-    numberOfSimulations = 40
+    numberOfSimulations = 100
 
     plt.ion()
     for i in range(numberOfSimulations):
