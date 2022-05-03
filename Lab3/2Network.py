@@ -116,7 +116,7 @@ def updateNetwork(network, p, q, r):
             randomNeighbour = random.sample(neighbors,1)[0]
 
             #If that person is resting then the bored person will now become resting
-            if network.nodes.data()[randomNeighbour]["value"] == bored:
+            if network.nodes.data()[randomNeighbour]["value"] == resting:
                 newState.nodes.data()[node[0]]["value"] = resting
                 continue
 
@@ -135,7 +135,7 @@ def updateNetwork(network, p, q, r):
 
 if __name__ == "__main__":
 
-    G = nx.complete_graph(4)
+    # G = nx.complete_graph(4)
 
     # Network 
     network = initializeNetwork(G)
@@ -145,17 +145,17 @@ if __name__ == "__main__":
 
 
     # Set simulation parameters:
-    p = 0.0
-    q = 1
-    r = 0.0
-    numberOfSimulations = 10
+    p = 0.1
+    q = 0.1
+    r = 0.3
+    numberOfSimulations = 200
 
-    # plt.ion()
+    plt.ion()
     for i in range(numberOfSimulations):
 
         network = updateNetwork(network, p, q, r)
-        # plt.close()
+        plt.close()
         plotNetwork(network, f"Network at iteration {i+1}")
-        # plt.show()
-        # plt.pause(0.01)
+        plt.show()
+        plt.pause(0.01)
 
