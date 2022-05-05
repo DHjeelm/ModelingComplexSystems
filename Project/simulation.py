@@ -9,7 +9,7 @@ from geometry import *
 from neighbor import *
 
 
-def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime):
+def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime, size):
     # Generate random particle coordinates
     # particles[i,0] = x
     # particles[i,1] = y
@@ -18,7 +18,7 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime):
     numberOfParticles = numberOfPrey + numberOfPredators
 
 
-    particles = np.random.uniform(0, 1, size=(numberOfParticles, 2))
+    particles = np.random.uniform(0, size, size=(numberOfParticles, 2))
 
     # Initialize random angles
     thetas = np.zeros((numberOfParticles, 1))
@@ -65,17 +65,17 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime):
                 # Move to new position 
                 particles[i,:] += timeStep * angleToVector(thetas[i])
 
-            # Assure correct boundaries (xmax, ymax) = (1,1)
+            # Assure correct boundaries
             if particles[i, 0] < 0:
-                particles[i, 0] = 1 + particles[i, 0]
+                particles[i, 0] = size + particles[i, 0]
 
-            if particles[i, 0] > 1:
+            if particles[i, 0] > size:
                 particles[i, 0] = particles[i, 0] - 1
 
             if particles[i, 1] < 0:
-                particles[i, 1] = 1 + particles[i, 1]
+                particles[i, 1] = size + particles[i, 1]
 
-            if particles[i, 1] > 1:
+            if particles[i, 1] > size:
                 particles[i, 1] = particles[i, 1] - 1
 
 
@@ -202,12 +202,48 @@ def makeVideo(plotDir):
     out.release()
 
 def calculatePolarisation(thetas, numberOfParticles):
-    # Calcula
+    # Calculate cosine and sine sum
     cosSum = (np.sum(np.cos(thetas)))**2
     sinSum = (np.sum(np.sin(thetas)))**2
+    # Polarisation
     polarisation = 1/numberOfParticles*np.sqrt(cosSum+ sinSum)
     
     return polarisation
+
+def plotModelWithoutSaving(size):
+    # Read text files
+    txtFiles = [i for i in os.listdir(particleDir) if i.endswith(".txt")]
+
+    # Sort the files
+    sortedFiles = sorted(txtFiles)
+
+
+    for i, fname in enumerate(sortedFiles):
+        print(end = ".", flush=True)
+
+        # Fetch file
+        f = os.path.join(particleDir, fname)
+
+        # Read in from file
+        data = np.loadtxt(f)
+        coords = data[:,0:2]
+        thetas = data[:,2]
+
+        # Plot the current state
+
+        # Set axes between 0 and 1
+        plt.axis([0, size, 0, size])
+
+        # Remove tick marks
+        frame = plt.gca()
+        frame.axes.get_xaxis().set_ticks([])
+        frame.axes.get_yaxis().set_ticks([])
+
+        # Plot
+        plotModel(coords, thetas, numberOfPredators)
+        plt.title(f"Simulation at time step {i}")
+        plt.show()
+
 
 # Simulation
 if __name__ == '__main__':
@@ -234,9 +270,12 @@ if __name__ == '__main__':
     t = 0.0
     timeStep = 0.01  
     T = 1
+    size = 5
 
     # Simulate model
-    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, T)
+    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, T, size)
+
+    plotModelWithoutSaving(size)
 
     # # print(polarisation)
 
@@ -244,11 +283,11 @@ if __name__ == '__main__':
     # plt.show()
 
 
-    # Create plots
-    createPlots(particleDir, numberOfPredators)
+    # # Create plots
+    # createPlots(particleDir, numberOfPredators)
 
-    # Make video
-    makeVideo(plotDir)
+    # # Make video
+    # makeVideo(plotDir)
 
     # print(polarisation)
 
