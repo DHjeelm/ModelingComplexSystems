@@ -5,25 +5,27 @@ from geometry import *
 
 # File with functions needed for neighbor calculation of the model. Inspired by: git@github.com:fskerman/vicsek_model.git
 
-def getClosestNeighbor(particles, r, x0, y0):
+def getClosestNeighbor(particles, r, x0, y0, i):
     ''' Function returning the index of the closest neighbor'''
 
+    # Remove yourself as a neighbor
+    checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
     neighbors = []
-
-    for j,(x1,y1) in enumerate(particles):
+    checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
+    for j,(x1,y1) in enumerate(checkNeighbors):
         dist = torusDistance(x0, y0, x1, y1)
-        # print(dist)
         if dist < r:
             neighbors.append(dist)
+        else:
+            neighbors.append(float('inf'))
         
     # Get minimum value and index
-    minValue = min(neighbors)
+    minDistance = min(neighbors)
+
+    minIndex = neighbors.index(minDistance)
 
 
-    minIndex = neighbors.index(minValue)
-    print(minIndex)
-
-    return minIndex
+    return minIndex, minDistance
 
 
 def getNeighbors(particles, r, x0, y0):
@@ -38,7 +40,6 @@ def getNeighbors(particles, r, x0, y0):
             neighbors.append(j)
 
     return neighbors
-
 
 
 def getAverage(thetas, neighbors):

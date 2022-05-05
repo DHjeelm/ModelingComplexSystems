@@ -9,35 +9,56 @@ from cv2 import VideoWriter, VideoWriter_fourcc
 from geometry import *
 from neighbor import *
 
-def predatorMovement(particles, thetas, rPredator, eta, x, y, i):
 
-    # Get neighbor indices for current particle
-    neighbor = getClosestNeighbor(particles, rPredator, x, y)
+def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i):
 
-    # Find neighbor coords
-    neighborX, neighborY = particles[neighbor,:]
+    # Get closest neighbors distance and indices
+    minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i)
 
-    # Find predator coords
-    predX, predY = particles[i,:]
+    # Rules for eating
+    # if minDistance < rEat:
+    #     particles[minIndex,:] = 1
 
-    # Find difference between neighbor and predator
-    norm = torusDistance(neighborX, neighborY, predX, predY)
-    diffX = (neighborX - predX)/norm
-    diffY = (neighborY - predY)/norm
+    # If none inside rPredator move randomly
+    if minDistance == float('inf'):
+        
+        # Fetch random angle
+        n_angle = randomAngle()
 
-    # Calculate update angle
-    phi = atan2(diffY, diffX) + np.random.uniform(0, eta/3) * math.pi
+        # Multiply with eta
+        noise = 0.2 * n_angle
 
-    if phi < 0:
-        phi += 2*math.pi
+        # Update theta
+        thetas[i] += noise
+
+        # Move to new position 
+        particles[i,:] += timeStep * angleToVector(thetas[i])
+
+    else:
+
+        # Find neighbor coords
+        neighborX, neighborY = particles[minIndex,:]
+
+        # Find predator coords
+        predX, predY = particles[i,:]
+
+        # Find difference between neighbor and predator
+        norm = torusDistance(neighborX, neighborY, predX, predY)
+        diffX = (neighborX - predX)/norm
+        diffY = (neighborY - predY)/norm
+
+        # Calculate update angle
+        phi = atan2(diffY, diffX) + np.random.uniform(0, eta/3) * math.pi
+
+        if phi < 0:
+            phi += 2*math.pi
 
 
-    # Update theta
-    thetas[i] = phi
+        # Update theta
+        thetas[i] = phi
 
-    # Move to new position 
-    particles[i,:] += timeStep * angleToVector(thetas[i])
-
+        # Move to new position 
+        particles[i,:] += timeStep * angleToVector(thetas[i])
 
 
 def preyMovement(particles, thetas, eta, rPrey, x, y, i):
@@ -59,15 +80,12 @@ def preyMovement(particles, thetas, eta, rPrey, x, y, i):
     particles[i,:] += timeStep * angleToVector(thetas[i])
 
 
-def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, timeStep, endTime, size):
-    # Generate random particle coordinates
-    # particles[i,0] = x
-    # particles[i,1] = y
+def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, timeStep, endTime, size):
 
     # Calculate number of particles
     numberOfParticles = numberOfPrey + numberOfPredators
 
-
+    # Create particles
     particles = np.random.uniform(0, size, size=(numberOfParticles, 2))
 
     # Initialize random angles
@@ -91,11 +109,10 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, timeSt
 
         # Update the model
         for i, (x, y) in enumerate(particles):
-
+            
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                predatorMovement(particles, thetas, rPredator, eta, x, y, i)
-
+                predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i)
             # Prey
             else:
                 preyMovement(particles, thetas, eta, rPrey, x, y, i)
@@ -253,7 +270,7 @@ def plotModelWithoutSaving(size):
     # Sort the files
     sortedFiles = sorted(txtFiles)
 
-    plt.ion()
+    # plt.ion()
     for i, fname in enumerate(sortedFiles):
         print(end = ".", flush=True)
 
@@ -266,7 +283,7 @@ def plotModelWithoutSaving(size):
         thetas = data[:,2]
 
         # Plot the current state
-        plt.close()
+        # plt.close()
 
         # Set axes between 0 and 1
         plt.axis([0, size, 0, size])
@@ -280,7 +297,7 @@ def plotModelWithoutSaving(size):
         plotModel(coords, thetas, numberOfPredators)
         plt.title(f"Simulation at time step {i}")
         plt.show()
-        plt.pause(0.01)
+        # plt.pause(0.01)
 
 
 
@@ -313,20 +330,23 @@ if __name__ == '__main__':
     numberOfPredators = 1    
 
     # Eta (randomness factor)  
-    eta = 0.2
+    eta = 0
 
     # Visual radius for prey and predator
     rPrey = 0.20
-    rPredator = 0.5
+    rPredator = 0
+
+    # Eat radius
+    rEat = 0.05
 
     # Time settings
     t = 0.0
     timeStep = 0.01  
-    T = 1
+    T = 2
 
 
     # Simulate model
-    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, timeStep, T, size)
+    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, timeStep, T, size)
 
     plotModelWithoutSaving(size)
 
