@@ -1,6 +1,7 @@
 # File for runnning a simulation of the model. The setup of the file is inspired by: git@github.com:fskerman/vicsek_model.git
 
 # Imports
+import math
 import cv2, os, sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,8 +9,57 @@ from cv2 import VideoWriter, VideoWriter_fourcc
 from geometry import *
 from neighbor import *
 
+def predatorMovement(particles, thetas, rPredator, eta, x, y, i):
 
-def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime, size):
+    # Get neighbor indices for current particle
+    neighbor = getClosestNeighbor(particles, rPredator, x, y)
+
+    # Find neighbor coords
+    neighborX, neighborY = particles[neighbor,:]
+
+    # Find predator coords
+    predX, predY = particles[i,:]
+
+    # Find difference between neighbor and predator
+    norm = torusDistance(neighborX, neighborY, predX, predY)
+    diffX = (neighborX - predX)/norm
+    diffY = (neighborY - predY)/norm
+
+    # Calculate update angle
+    phi = atan2(diffY, diffX) + np.random.uniform(0, eta/3) * math.pi
+
+    if phi < 0:
+        phi += 2*math.pi
+
+
+    # Update theta
+    thetas[i] = phi
+
+    # Move to new position 
+    particles[i,:] += timeStep * angleToVector(thetas[i])
+
+
+
+def preyMovement(particles, thetas, eta, rPrey, x, y, i):
+
+    # Get neighbor indices for current particle
+    neighbors = getNeighbors(particles, rPrey, x, y)
+
+    # Get average theta angle
+    avg = getAverage(thetas, neighbors)
+
+    # Get noise angle
+    n_angle = randomAngle()
+    noise = eta * n_angle
+
+    # Update theta
+    thetas[i] = avg + noise
+
+    # Move to new position 
+    particles[i,:] += timeStep * angleToVector(thetas[i])
+
+
+def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, timeStep, endTime, size):
     # Generate random particle coordinates
     # particles[i,0] = x
     # particles[i,1] = y
@@ -44,27 +94,13 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, endTime, si
 
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                continue
+                predatorMovement(particles, thetas, rPredator, eta, x, y, i)
 
             # Prey
             else:
+                preyMovement(particles, thetas, eta, rPrey, x, y, i)
 
-                # Get neighbor indices for current particle
-                neighbors = getNeighbors(particles, r, x, y)
-
-                # Get average theta angle
-                avg = getAverage(thetas, neighbors)
-
-                # Get noise angle
-                n_angle = randomAngle()
-                noise = eta * n_angle
-
-                # Update theta
-                thetas[i] = avg + noise
-
-                # Move to new position 
-                particles[i,:] += timeStep * angleToVector(thetas[i])
-
+                
             # Assure correct boundaries
             if particles[i, 0] < 0:
                 particles[i, 0] = size + particles[i, 0]
@@ -217,7 +253,7 @@ def plotModelWithoutSaving(size):
     # Sort the files
     sortedFiles = sorted(txtFiles)
 
-
+    plt.ion()
     for i, fname in enumerate(sortedFiles):
         print(end = ".", flush=True)
 
@@ -230,6 +266,7 @@ def plotModelWithoutSaving(size):
         thetas = data[:,2]
 
         # Plot the current state
+        plt.close()
 
         # Set axes between 0 and 1
         plt.axis([0, size, 0, size])
@@ -243,6 +280,8 @@ def plotModelWithoutSaving(size):
         plotModel(coords, thetas, numberOfPredators)
         plt.title(f"Simulation at time step {i}")
         plt.show()
+        plt.pause(0.01)
+
 
 
 # Simulation
@@ -262,18 +301,32 @@ if __name__ == '__main__':
     # Change directory to the particle dir
     os.chdir(particleDir)
 
-    # Simulation parameters      
+    ########## Simulation parameters  ############ 
+
+    # Size of board
+    size = 1
+
+    # Number of preys    
     numberOfPrey = 40
-    numberOfPredators = 1      
-    eta = 0
-    r = 0.15      
+
+    # Number of predators
+    numberOfPredators = 1    
+
+    # Eta (randomness factor)  
+    eta = 0.2
+
+    # Visual radius for prey and predator
+    rPrey = 0.20
+    rPredator = 0.5
+
+    # Time settings
     t = 0.0
     timeStep = 0.01  
     T = 1
-    size = 5
+
 
     # Simulate model
-    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, r, timeStep, T, size)
+    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, timeStep, T, size)
 
     plotModelWithoutSaving(size)
 

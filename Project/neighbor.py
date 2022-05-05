@@ -1,8 +1,30 @@
 #!/usr/bin/python
 import numpy as np
+from sklearn import neighbors
 from geometry import *
 
 # File with functions needed for neighbor calculation of the model. Inspired by: git@github.com:fskerman/vicsek_model.git
+
+def getClosestNeighbor(particles, r, x0, y0):
+    ''' Function returning the index of the closest neighbor'''
+
+    neighbors = []
+
+    for j,(x1,y1) in enumerate(particles):
+        dist = torusDistance(x0, y0, x1, y1)
+        # print(dist)
+        if dist < r:
+            neighbors.append(dist)
+        
+    # Get minimum value and index
+    minValue = min(neighbors)
+
+
+    minIndex = neighbors.index(minValue)
+    print(minIndex)
+
+    return minIndex
+
 
 def getNeighbors(particles, r, x0, y0):
     ''' Function returning a list of indices for all neighbors. It includes itself as a neighor so it will be included in average '''
