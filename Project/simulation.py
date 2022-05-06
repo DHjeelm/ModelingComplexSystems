@@ -10,17 +10,31 @@ from geometry import *
 from neighbor import *
 
 
-def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i):
+def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
 
     # Get closest neighbors distance and indices
-    minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i)
+    minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i, size)
 
     # Rules for eating
-    # if minDistance < rEat:
-    #     particles[minIndex,:] = 1
+    numberOfEaten = 0
+    if minDistance < rEat:
+        
+        particles[minIndex,:] += 1000
+
+        # Fetch random angle
+        n_angle = randomAngle()
+
+        # Multiply with eta
+        noise = 0.2 * n_angle
+
+        # Update theta
+        thetas[i] += noise
+
+        # Move to new position 
+        particles[i,:] += timeStep * angleToVector(thetas[i])
 
     # If none inside rPredator move randomly
-    if minDistance == float('inf'):
+    if minDistance > rPredator:
         
         # Fetch random angle
         n_angle = randomAngle()
@@ -35,36 +49,40 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i):
         particles[i,:] += timeStep * angleToVector(thetas[i])
 
     else:
-
         # Find neighbor coords
         neighborX, neighborY = particles[minIndex,:]
 
         # Find predator coords
         predX, predY = particles[i,:]
 
-        # Find difference between neighbor and predator
-        norm = torusDistance(neighborX, neighborY, predX, predY)
-        diffX = (neighborX - predX)/norm
-        diffY = (neighborY - predY)/norm
+        # # Find difference between neighbor and predator
+        # norm = torusDistance(neighborX, neighborY, predX, predY)
+        # diffX = (neighborX - predX)/norm
+        # diffY = (neighborY - predY)/norm
 
-        # Calculate update angle
-        phi = atan2(diffY, diffX) + np.random.uniform(0, eta/3) * math.pi
+        # # Calculate update angle
+        # phi = atan2(diffY, diffX) + np.random.uniform(0, eta/3) * math.pi
 
-        if phi < 0:
-            phi += 2*math.pi
+        distance, angle = torusDistance(neighborX, neighborY, predX, predY)
 
+        # if angle < 0:
+        #     phi += 2*math.pi
 
         # Update theta
-        thetas[i] = phi
+        thetas[i] = angle
 
         # Move to new position 
         particles[i,:] += timeStep * angleToVector(thetas[i])
 
+    # print(f"Distance to prey at iteration {t*100} is {minDistance} and angle is {thetas[i]}")
 
 def preyMovement(particles, thetas, eta, rPrey, x, y, i):
 
     # Get neighbor indices for current particle
     neighbors = getNeighbors(particles, rPrey, x, y)
+
+    # # Debug
+    # avg = -math.pi*3/4
 
     # Get average theta angle
     avg = getAverage(thetas, neighbors)
@@ -79,11 +97,23 @@ def preyMovement(particles, thetas, eta, rPrey, x, y, i):
     # Move to new position 
     particles[i,:] += timeStep * angleToVector(thetas[i])
 
-
 def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, timeStep, endTime, size):
 
     # Calculate number of particles
     numberOfParticles = numberOfPrey + numberOfPredators
+
+
+    # # Debug setting
+    # particles = np.zeros((numberOfParticles, 2))
+    # particles[0,0] += 0.4
+    # particles[0,1] += 0.5
+    # particles[1,0] += 0.5
+    # particles[1,1] += 0.5
+
+    # thetas = np.zeros((numberOfParticles, 1))
+    # thetas[0,0] = -math.pi*3/4
+    # thetas[1,0] = -math.pi*3/4
+
 
     # Create particles
     particles = np.random.uniform(0, size, size=(numberOfParticles, 2))
@@ -112,7 +142,7 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, 
             
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i)
+                predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t)
             # Prey
             else:
                 preyMovement(particles, thetas, eta, rPrey, x, y, i)
@@ -123,13 +153,13 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, 
                 particles[i, 0] = size + particles[i, 0]
 
             if particles[i, 0] > size:
-                particles[i, 0] = particles[i, 0] - 1
+                particles[i, 0] = particles[i, 0] - size
 
             if particles[i, 1] < 0:
                 particles[i, 1] = size + particles[i, 1]
 
             if particles[i, 1] > size:
-                particles[i, 1] = particles[i, 1] - 1
+                particles[i, 1] = particles[i, 1] - size
 
 
   
@@ -324,20 +354,20 @@ if __name__ == '__main__':
     size = 1
 
     # Number of preys    
-    numberOfPrey = 40
+    numberOfPrey = 3
 
     # Number of predators
     numberOfPredators = 1    
 
     # Eta (randomness factor)  
-    eta = 0
+    eta = 0.2
 
     # Visual radius for prey and predator
     rPrey = 0.20
-    rPredator = 0
+    rPredator = 0.5
 
     # Eat radius
-    rEat = 0.05
+    rEat = 0
 
     # Time settings
     t = 0.0

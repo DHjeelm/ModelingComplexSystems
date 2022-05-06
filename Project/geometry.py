@@ -3,8 +3,10 @@
 # File with functions needed for the geometry of the model. Inspired by: git@github.com:fskerman/vicsek_model.git
 
 # Imports
+from dis import dis
 import numpy as np 
 from math import atan2, pi, sin, cos, sqrt
+import math
 
 def euclideanDistance(x1, y1, x2, y2):
     ''' Function calculating the euclidean distance between coordinates (x,y) '''
@@ -45,9 +47,10 @@ def angleToVector(theta):
 
     return uv
 
-# Euclidean distance between (x,y) coordinates on 1 x 1 torus
 def torusDistance(x1, y1, x2, y2):
-    ''' Function returning the euclidean distance between (x,y) coordinates on 1 x 1 torus '''
+    ''' Function returning the euclidean distance between (x,y) coordinates on a torus '''
     x_diff = min(abs(x1 - x2), 1 - abs(x1 - x2))
     y_diff = min(abs(y1 - y2), 1 - abs(y1 - y2))
-    return sqrt(x_diff**2 + y_diff**2)
+    distance = sqrt(x_diff**2 + y_diff**2)
+    angle = atan2(y_diff, x_diff) + math.pi
+    return distance, angle

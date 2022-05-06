@@ -5,15 +5,16 @@ from geometry import *
 
 # File with functions needed for neighbor calculation of the model. Inspired by: git@github.com:fskerman/vicsek_model.git
 
-def getClosestNeighbor(particles, r, x0, y0, i):
+def getClosestNeighbor(particles, r, x0, y0, i, size):
     ''' Function returning the index of the closest neighbor'''
 
     # Remove yourself as a neighbor
     checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
     neighbors = []
-    checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
     for j,(x1,y1) in enumerate(checkNeighbors):
-        dist = torusDistance(x0, y0, x1, y1)
+
+        dist, angle = torusDistance(x0, y0, x1, y1)
+
         if dist < r:
             neighbors.append(dist)
         else:
@@ -21,10 +22,9 @@ def getClosestNeighbor(particles, r, x0, y0, i):
         
     # Get minimum value and index
     minDistance = min(neighbors)
-
     minIndex = neighbors.index(minDistance)
 
-
+    # Return minimum value and index
     return minIndex, minDistance
 
 
@@ -34,7 +34,7 @@ def getNeighbors(particles, r, x0, y0):
     neighbors = []
 
     for j,(x1,y1) in enumerate(particles):
-        dist = torusDistance(x0, y0, x1, y1)
+        dist, angle = torusDistance(x0, y0, x1, y1)
 
         if dist < r:
             neighbors.append(j)
