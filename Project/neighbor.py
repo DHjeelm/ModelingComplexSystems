@@ -13,7 +13,7 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
     neighbors = []
     for j,(x1,y1) in enumerate(checkNeighbors):
 
-        dist, angle = torusDistance(x0, y0, x1, y1)
+        dist, angle = torusDistance(x0, y0, x1, y1, size)
 
         if dist < r:
             neighbors.append(dist)
@@ -28,13 +28,13 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
     return minIndex, minDistance
 
 
-def getNeighbors(particles, r, x0, y0):
+def getNeighbors(particles, r, x0, y0, size):
     ''' Function returning a list of indices for all neighbors. It includes itself as a neighor so it will be included in average '''
 
     neighbors = []
 
     for j,(x1,y1) in enumerate(particles):
-        dist, angle = torusDistance(x0, y0, x1, y1)
+        dist, angle = torusDistance(x0, y0, x1, y1, size)
 
         if dist < r:
             neighbors.append(j)
