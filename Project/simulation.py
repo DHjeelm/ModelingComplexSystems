@@ -18,9 +18,11 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
     # # Rules for eating
     # numberOfEaten = 0
     if minDistance < rEat:
-
+        
+        # Prey is teleported to random position with a random angle.
         particles[minIndex,:] = np.random.uniform(0, size)
-        print(f"At time step {round(t*100)} predator ate prey {minIndex}")
+        thetas[minIndex] = randomAngle()
+        # print(f"At time step {round(t*100)} predator ate prey {minIndex}")
 
         # Fetch random angle
         n_angle = randomAngle()
@@ -37,7 +39,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
     # If none inside rPredator move randomly
     elif minDistance >= rPredator:
 
-        print("I can't find no neighbors, lets move randomly")
+        # print("I can't find no neighbors, lets move randomly")
 
 
         # Fetch random angle
@@ -67,7 +69,14 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
 
         # Update the theta
         angle = vectorToAngle((moveX,moveY))
-        thetas[i] = angle
+
+        # Fetch random angle
+        n_angle = randomAngle()
+
+        # Multiply with eta
+        noise = eta * n_angle
+
+        thetas[i] = angle + noise
 
         # Update predator position
         particles[i,:] += timeStep * angleToVector(thetas[i])
@@ -89,11 +98,9 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
         # if angle < 0:
         #     phi += 2*math.pi
 
-        print(f"At time step {np.round(t*100)}: Neighbor is at {(neighborX, neighborY)}, i am at {predX, predY}")
-        print(f"I want to move {moveX, moveY} and the angle is {angle}")
-        print()
-
-
+        # print(f"At time step {np.round(t*100)}: Neighbor is at {(neighborX, neighborY)}, i am at {predX, predY}")
+        # print(f"I want to move {moveX, moveY} and the angle is {angle}")
+        # print()
 
 
 def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size):
@@ -117,7 +124,7 @@ def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size
     # Move to new position
     particles[i,:] += timeStep * angleToVector(thetas[i])
 
-def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, timeStep, endTime, size):
+def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size):
 
     # Calculate number of particles
     numberOfParticles = numberOfPrey + numberOfPredators
@@ -175,10 +182,10 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, 
 
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t)
+                predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t)
             # Prey
             else:
-                preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size)
+                preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size)
 
 
             # Assure correct boundaries
@@ -235,10 +242,10 @@ def plotModel(coords, thetas, numberOfPredators):
 
     return
 
-def savePlot(path, fname, eta):
+def savePlot(path, fname, etaPrey, etaPredator, size):
     '''Function saving a plot for the current state of the model'''
     # Axes between 0 and 1
-    plt.axis([0, 1, 0, 1])
+    plt.axis([0, size, 0, size])
 
     # remove tick marks
     frame = plt.gca()
@@ -246,7 +253,7 @@ def savePlot(path, fname, eta):
     frame.axes.get_yaxis().set_ticks([])
 
     # Title
-    plt.title(f"Simulation with η = {eta}")
+    plt.title(f"Simulation with ηPrey = {etaPrey} and ηPred = {etaPredator}")
 
     # Save plot
     plt.savefig(os.path.join(path, fname[:-4]+".jpg"))
@@ -257,7 +264,7 @@ def savePlot(path, fname, eta):
 
     return
 
-def createPlots(particleDir, numberOfPredators):
+def createPlots(particleDir, numberOfPredators, size):
     '''Function that create plots from the txt.files of coordinates and thetas'''
 
     print("Creating plots", end='', flush=True)
@@ -278,7 +285,7 @@ def createPlots(particleDir, numberOfPredators):
 
         # Plot the current state and save it
         plotModel(coords, thetas, numberOfPredators)
-        savePlot(plotDir, fname, eta)
+        savePlot(plotDir, fname, etaPrey, etaPredator, size)
     print()
 
 def makeVideo(plotDir):
@@ -393,11 +400,12 @@ if __name__ == '__main__':
     numberOfPredators = 1
 
     # Eta (randomness factor)
-    eta = 0.3
+    etaPrey = 0
+    etaPredator = 0.2
 
     # Visual radius for prey and predator
     rPrey = 0.2
-    rPredator = 0.3
+    rPredator = 0.1
 
     # Eat radius
     rEat = 0.05
@@ -409,7 +417,7 @@ if __name__ == '__main__':
 
 
     # Simulate model
-    polarisation = simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, timeStep, endTime, size)
+    polarisation = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size)
 
     plotModelWithoutSaving(size)
 
@@ -420,7 +428,7 @@ if __name__ == '__main__':
 
 
     # # Create plots
-    # createPlots(particleDir, numberOfPredators)
+    # createPlots(particleDir, numberOfPredators, size)
 
     # # Make video
     # makeVideo(plotDir)
