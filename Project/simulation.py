@@ -19,7 +19,8 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
     # numberOfEaten = 0
     if minDistance < rEat:
 
-        particles[minIndex,:] += 1000
+        particles[minIndex,:] = np.random.uniform(0, size)
+        print(f"At time step {round(t*100)} predator ate prey {minIndex}")
 
         # Fetch random angle
         n_angle = randomAngle()
@@ -32,10 +33,9 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
 
         # Move to new position
         particles[i,:] += timeStep * angleToVector(thetas[i])
-        print("I should eat prey")
 
     # If none inside rPredator move randomly
-    elif minDistance > rPredator:
+    elif minDistance >= rPredator:
 
         print("I can't find no neighbors, lets move randomly")
 
@@ -69,7 +69,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
         angle = vectorToAngle((moveX,moveY))
         thetas[i] = angle
 
-        # Move in the direction 
+        # Update predator position
         particles[i,:] += timeStep * angleToVector(thetas[i])
 
 
@@ -124,26 +124,26 @@ def simulateModel(numberOfPrey, numberOfPredators, eta, rPrey, rPredator, rEat, 
 
 
     # Debug setting
-    particles = np.zeros((numberOfParticles, 2))
-    thetas = np.zeros((numberOfParticles, 1))
-    # # Prey
-    particles[0,0] += 0.1
-    particles[0,1] += 0.5
-    particles[1,0] += 0.1
-    particles[1,1] += 0.45
-    particles[2,0] += 0.1
-    particles[2,1] += 0.4
-    # thetas[0,0] = math.pi*3/2
-    # thetas[1,0] = math.pi*3/2
-    # thetas[2,0] = math.pi*3/2
-    # thetas[0,0] = 0
-    # thetas[1,0] = 0
-    # thetas[2,0] = 0
+    # particles = np.zeros((numberOfParticles, 2))
+    # thetas = np.zeros((numberOfParticles, 1))
+    # # # Prey
+    # particles[0,0] += 0.1
+    # particles[0,1] += 0.5
+    # particles[1,0] += 0.1
+    # particles[1,1] += 0.45
+    # particles[2,0] += 0.1
+    # particles[2,1] += 0.4
+    # # thetas[0,0] = math.pi*3/2
+    # # thetas[1,0] = math.pi*3/2
+    # # thetas[2,0] = math.pi*3/2
+    # # thetas[0,0] = 0
+    # # thetas[1,0] = 0
+    # # thetas[2,0] = 0
 
-    # Predator
-    particles[3,0] += 0.95
-    particles[3,1] += 0.5
-    thetas[3,0] = math.pi
+    # # Predator
+    # particles[3,0] += 0.9
+    # particles[3,1] += 0.5
+    # thetas[3,0] = math.pi
 
 
     # Real simulation setting
@@ -387,20 +387,20 @@ if __name__ == '__main__':
     size = 1
 
     # Number of preys
-    numberOfPrey = 3
+    numberOfPrey = 40
 
     # Number of predators
     numberOfPredators = 1
 
     # Eta (randomness factor)
-    eta = 0
+    eta = 0.3
 
     # Visual radius for prey and predator
     rPrey = 0.2
-    rPredator = 0.2
+    rPredator = 0.3
 
     # Eat radius
-    rEat = 0
+    rEat = 0.05
 
     # Time settings
     t = 0.0
