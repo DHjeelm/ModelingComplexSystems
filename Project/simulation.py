@@ -417,14 +417,14 @@ if __name__ == '__main__':
 
     # Visual radius for prey and predator
     rPrey = 0.2
-    rPredator = 0.1
+    rPredator = 0.2
 
     # Eat radius
     rEat = 0.05
 
     # Speed
-    preySpeed = 2
-    predSpeed = 3
+    preySpeed = 1
+    predSpeed = 2
 
     # Time settings
     t = 0.0

@@ -6,7 +6,7 @@ from geometry import *
 # File with functions needed for neighbor calculation of the model. 
 # getNeighbors and getAverage is inspired by: git@github.com:fskerman/vicsek_model.git
 
-def getClosestNeighbor(particles, r, x0, y0, i, size):
+def getClosestNeighbor(particles, rPrey, x0, y0, i, size):
     ''' Function returning the index of the closest neighbor'''
 
     # Remove yourself as a neighbor
@@ -16,7 +16,7 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
 
         dist = torusDistance(x0, y0, x1, y1, size)
 
-        if dist < r:
+        if dist < rPrey:
             neighbors.append(dist)
         else:
             neighbors.append(float('inf'))
