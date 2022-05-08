@@ -8,27 +8,29 @@ import matplotlib.pyplot as plt
 from cv2 import VideoWriter, VideoWriter_fourcc
 from geometry import *
 from neighbor import *
+from measures import *
 
 
-def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
+def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t, numberOfEaten):
 
     # Get closest neighbors distance and indices
     minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i, size)
 
-    # # Rules for eating
-    # numberOfEaten = 0
+    #  Rules for eating
+    eaten = 0
     if minDistance < rEat:
+        # Update number of eaten
+        eaten = 1
         
         # Prey is teleported to random position with a random angle.
         particles[minIndex,:] = np.random.uniform(0, size)
         thetas[minIndex] = randomAngle()
-        # print(f"At time step {round(t*100)} predator ate prey {minIndex}")
 
         # Fetch random angle
         n_angle = randomAngle()
 
         # Multiply with eta
-        noise = eta * n_angle
+        noise = etaPredator * n_angle
 
         # Update theta
         thetas[i] += noise
@@ -41,12 +43,11 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
 
         # print("I can't find no neighbors, lets move randomly")
 
-
         # Fetch random angle
         n_angle = randomAngle()
 
         # Multiply with eta
-        noise = eta * n_angle
+        noise = etaPredator * n_angle
 
         # Update theta
         thetas[i] += noise
@@ -74,7 +75,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
         n_angle = randomAngle()
 
         # Multiply with eta
-        noise = eta * n_angle
+        noise = etaPredator * n_angle
 
         thetas[i] = angle + noise
 
@@ -101,6 +102,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, eta, x, y, i, size, t):
         # print(f"At time step {np.round(t*100)}: Neighbor is at {(neighborX, neighborY)}, i am at {predX, predY}")
         # print(f"I want to move {moveX, moveY} and the angle is {angle}")
         # print()
+    return eaten
 
 
 def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size):
@@ -165,6 +167,7 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
 
     polarisationList = []
+    numberOfEaten = 0
 
     print("Creating particle files", end='', flush=True)
     # Start the simulation
@@ -182,7 +185,8 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t)
+                eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t, numberOfEaten)
+                numberOfEaten += eaten
             # Prey
             else:
                 preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size)
@@ -211,7 +215,7 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
         # Update time
         t += timeStep
     print()
-    return polarisationList
+    return polarisationList, numberOfEaten
 
 def plotModel(coords, thetas, numberOfPredators):
     '''Function creating a plot for the current state of the model'''
@@ -324,14 +328,6 @@ def makeVideo(plotDir):
         out.write(imageArray[i])
     out.release()
 
-def calculatePolarisation(thetas, numberOfParticles):
-    # Calculate cosine and sine sum
-    cosSum = (np.sum(np.cos(thetas)))**2
-    sinSum = (np.sum(np.sin(thetas)))**2
-    # Polarisation
-    polarisation = 1/numberOfParticles*np.sqrt(cosSum+ sinSum)
-
-    return polarisation
 
 def plotModelWithoutSaving(size):
     # Read text files
@@ -400,7 +396,7 @@ if __name__ == '__main__':
     numberOfPredators = 1
 
     # Eta (randomness factor)
-    etaPrey = 0
+    etaPrey = 0.2
     etaPredator = 0.2
 
     # Visual radius for prey and predator
@@ -417,9 +413,10 @@ if __name__ == '__main__':
 
 
     # Simulate model
-    polarisation = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size)
-
+    polarisation, numberOfEaten = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size)
+    print(numberOfEaten)
     plotModelWithoutSaving(size)
+    # print(numberOfEaten)
 
     # # print(polarisation)
 
@@ -430,7 +427,7 @@ if __name__ == '__main__':
     # # Create plots
     # createPlots(particleDir, numberOfPredators, size)
 
-    # # Make video
+    # # # Make video
     # makeVideo(plotDir)
 
     # print(polarisation)

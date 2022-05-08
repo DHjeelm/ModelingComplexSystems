@@ -51,10 +51,9 @@ def torusDistance(x1, y1, x2, y2, size):
     ''' Function returning the euclidean distance between (x,y) coordinates on a torus '''
     x_diff = min(abs(x1 - x2), size - abs(x1 - x2))
     y_diff = min(abs(y1 - y2), size - abs(y1 - y2))
-    
     distance = sqrt(x_diff**2 + y_diff**2)
-    angle = atan2(y_diff, x_diff) + math.pi
-    return distance, angle
+    
+    return distance
 
 def predatorSense(x1, y1, x2, y2, size):
     ''' Function returning the euclidean distance between (x,y) coordinates on a torus '''

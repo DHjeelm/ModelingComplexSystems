@@ -3,7 +3,8 @@ import numpy as np
 from sklearn import neighbors
 from geometry import *
 
-# File with functions needed for neighbor calculation of the model. Inspired by: git@github.com:fskerman/vicsek_model.git
+# File with functions needed for neighbor calculation of the model. 
+# getNeighbors and getAverage is inspired by: git@github.com:fskerman/vicsek_model.git
 
 def getClosestNeighbor(particles, r, x0, y0, i, size):
     ''' Function returning the index of the closest neighbor'''
@@ -13,7 +14,7 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
     neighbors = []
     for j,(x1,y1) in enumerate(checkNeighbors):
 
-        dist, angle = torusDistance(x0, y0, x1, y1, size)
+        dist = torusDistance(x0, y0, x1, y1, size)
 
         if dist < r:
             neighbors.append(dist)
@@ -34,7 +35,7 @@ def getNeighbors(particles, r, x0, y0, size):
     neighbors = []
 
     for j,(x1,y1) in enumerate(particles):
-        dist, angle = torusDistance(x0, y0, x1, y1, size)
+        dist = torusDistance(x0, y0, x1, y1, size)
 
         if dist < r:
             neighbors.append(j)
@@ -57,7 +58,6 @@ def getAverage(thetas, neighbors):
     avgAngle = vectorToAngle(avgVector)
 
     return avgAngle
-
-
+ 
 
 
