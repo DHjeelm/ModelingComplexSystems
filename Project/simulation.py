@@ -6,12 +6,14 @@ import cv2, os, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from cv2 import VideoWriter, VideoWriter_fourcc
+from sympy import re
 from geometry import *
 from neighbor import *
 from measures import *
+import pylab as pl
 
 
-def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t, numberOfEaten):
+def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed):
 
     # Get closest neighbors distance and indices
     minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i, size)
@@ -36,7 +38,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         thetas[i] += noise
 
         # Move to new position
-        particles[i,:] += timeStep * angleToVector(thetas[i])
+        particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
 
     # If none inside rPredator move randomly
     elif minDistance >= rPredator:
@@ -53,7 +55,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         thetas[i] += noise
 
         # Move to new position
-        particles[i,:] += timeStep * angleToVector(thetas[i])
+        particles[i,:] += timeStep * predSpeed *  angleToVector(thetas[i])
 
 
 
@@ -80,7 +82,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         thetas[i] = angle + noise
 
         # Update predator position
-        particles[i,:] += timeStep * angleToVector(thetas[i])
+        particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
 
 
         # Previous move rules
@@ -105,7 +107,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
     return eaten
 
 
-def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size):
+def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size, preySpeed):
 
     # Get neighboring prey indices for current particle
     neighbors = getNeighbors(particles[:-numberOfPredators], rPrey, x, y, size)
@@ -124,9 +126,9 @@ def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size
     thetas[i] = avg + noise
 
     # Move to new position
-    particles[i,:] += timeStep * angleToVector(thetas[i])
+    particles[i,:] += timeStep * preySpeed * angleToVector(thetas[i])
 
-def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size):
+def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size, preySpeed, predSpeed):
 
     # Calculate number of particles
     numberOfParticles = numberOfPrey + numberOfPredators
@@ -167,11 +169,14 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
 
     polarisationList = []
+    eatenList = []
     numberOfEaten = 0
+
 
     print("Creating particle files", end='', flush=True)
     # Start the simulation
     t = 0
+
     while t < endTime:
 
         print(end='.', flush=True)
@@ -185,11 +190,11 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, t, numberOfEaten)
+                eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed)
                 numberOfEaten += eaten
             # Prey
             else:
-                preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size)
+                preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed)
 
 
             # Assure correct boundaries
@@ -206,6 +211,8 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
                 particles[i, 1] = particles[i, 1] - size
 
 
+        # Update number of eaten
+        eatenList.append(numberOfEaten)
 
         # Remove list within list to calculate polarization
         calcThetas = [item for sublist in thetas for item in sublist]
@@ -215,9 +222,9 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
         # Update time
         t += timeStep
     print()
-    return polarisationList, numberOfEaten
+    return polarisationList, eatenList
 
-def plotModel(coords, thetas, numberOfPredators):
+def plotModel(coords, thetas, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat):
     '''Function creating a plot for the current state of the model'''
 
     # Create color scheme for model
@@ -244,20 +251,24 @@ def plotModel(coords, thetas, numberOfPredators):
         y1 = y - (0.025 * v[1])
         plt.plot([x, x1], [y, y1], color=c)
 
+        # textstr = f"Parameters:\n\nPrey:\nNumber of prey: {numberOfPrey}\netaPrey: {etaPrey}\nrPrey: {rPrey}\n\nPredator\nNumber of predators: {numberOfPredators}\netaPredator: {etaPredator}\nrPredator: {rPredator}\nrEat: {rEat}"
+        # plt.text(0.02, 0.5, textstr, fontsize=10, transform=plt.gcf().transFigure)
+        # plt.subplots_adjust(left=0.3)
+
     return
 
-def savePlot(path, fname, etaPrey, etaPredator, size):
+def savePlot(path, fname, etaPrey, etaPredator, size, i):
     '''Function saving a plot for the current state of the model'''
-    # Axes between 0 and 1
+    # Axes between 0 and size
     plt.axis([0, size, 0, size])
 
-    # remove tick marks
+    # Remove tick marks
     frame = plt.gca()
     frame.axes.get_xaxis().set_ticks([])
     frame.axes.get_yaxis().set_ticks([])
 
     # Title
-    plt.title(f"Simulation with ηPrey = {etaPrey} and ηPred = {etaPredator}")
+    plt.title(f"Simulation")
 
     # Save plot
     plt.savefig(os.path.join(path, fname[:-4]+".jpg"))
@@ -276,7 +287,7 @@ def createPlots(particleDir, numberOfPredators, size):
     # Read text files
     txtFiles = [i for i in os.listdir(particleDir) if i.endswith(".txt")]
 
-    for fname in txtFiles:
+    for i, fname in enumerate(txtFiles):
         print(end = ".", flush=True)
 
         # Fetch file
@@ -289,7 +300,7 @@ def createPlots(particleDir, numberOfPredators, size):
 
         # Plot the current state and save it
         plotModel(coords, thetas, numberOfPredators)
-        savePlot(plotDir, fname, etaPrey, etaPredator, size)
+        savePlot(plotDir, fname, etaPrey, etaPredator, size, i)
     print()
 
 def makeVideo(plotDir):
@@ -329,7 +340,7 @@ def makeVideo(plotDir):
     out.release()
 
 
-def plotModelWithoutSaving(size):
+def plotModelWithoutSaving(size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed):
     # Read text files
     txtFiles = [i for i in os.listdir(particleDir) if i.endswith(".txt")]
 
@@ -358,10 +369,15 @@ def plotModelWithoutSaving(size):
         frame = plt.gca()
         frame.axes.get_xaxis().set_ticks([])
         frame.axes.get_yaxis().set_ticks([])
+        
 
         # Plot
-        plotModel(coords, thetas, numberOfPredators)
+        plotModel(coords, thetas, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat)
         plt.title(f"Simulation at time step {i}")
+        textstr = f"Parameters:\nNumber of prey: {numberOfPrey}\netaPrey: {etaPrey}\nrPrey: {rPrey}\nPrey speed: {preySpeed}\nNumber of predators: {numberOfPredators}\netaPredator: {etaPredator}\nrPredator: {rPredator}\nrEat: {rEat}\nPredator speed: {predSpeed}\n\n\n\nMeasurements:\nNumber of eaten prey: {eaten[i]}\nPolarisation: {np.round(polarisation[i],2)}"
+        plt.text(0.02, 0.3, textstr, fontsize=10, transform=plt.gcf().transFigure)
+        plt.subplots_adjust(left=0.3)
+
         plt.show()
         # plt.pause(0.01)
 
@@ -406,6 +422,10 @@ if __name__ == '__main__':
     # Eat radius
     rEat = 0.05
 
+    # Speed
+    preySpeed = 2
+    predSpeed = 3
+
     # Time settings
     t = 0.0
     timeStep = 0.01
@@ -413,9 +433,9 @@ if __name__ == '__main__':
 
 
     # Simulate model
-    polarisation, numberOfEaten = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size)
-    print(numberOfEaten)
-    plotModelWithoutSaving(size)
+    polarisation, eaten = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size, preySpeed, predSpeed)
+    print(eaten)
+    plotModelWithoutSaving(size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed)
     # print(numberOfEaten)
 
     # # print(polarisation)
