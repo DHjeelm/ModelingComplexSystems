@@ -1,11 +1,8 @@
 import multiprocessing
 from threading import Thread
-from requests import put
-from sympy import nsimplify
 from question1 import *
 import numpy as np
 import random
-import seaborn as sns
 from multiprocessing import Process, Lock
 import time
 import sys
@@ -26,7 +23,8 @@ qs = np.linspace(0, .1, 40)
 progress = 0
 
 
-def worker(data: list, resultToWrite: np.ndarray):
+def worker(data: list, resultToWrite):
+    
 
     for info in data:
         i = info[0]
@@ -41,8 +39,8 @@ def worker(data: list, resultToWrite: np.ndarray):
             nSharers = np.count_nonzero(population == sharer)
             resultToWrite[i * nSimulations + j] = nSharers
 
-        progress = (i * nSimulations + j) / len(resultToWrite)
-        print(f"{progress}% done")
+        progress = np.sum(np.array(resultToWrite) >= 0) / len(resultToWrite)
+        print(f"{progress * 100}% done")                                             
 
         sys.stdout.flush()
 
@@ -66,9 +64,10 @@ def split(a, n):
 
 
 if __name__ == "__main__":
-    nProcesses = 6
+    nProcesses = multiprocessing.cpu_count()
+    print(f"Starting process with {nProcesses} workers")
     start = time.time()
-    preparedResult = np.ndarray(
+    preparedResult = -1 * np.ones(
         (nSimulations * qs.size), dtype=ctypes.c_int)
     shared_array = to_shared_array(preparedResult, ctype=ctypes.c_int)
     result = to_numpy_array(shared_array, preparedResult.shape)
