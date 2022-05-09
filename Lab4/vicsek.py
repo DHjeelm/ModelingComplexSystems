@@ -4,8 +4,10 @@ import os, sys
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from math import pi, sqrt, cos, sin, atan2
+
 
 #for videos
 import moviepy.video.io.ImageSequenceClip
@@ -163,114 +165,120 @@ def save_plot(path, fname, eta):
 # ------------------------------- RUNS FROM HERE -------------------------------
 
 if __name__ == '__main__':
-
-    # keeping it tidy
-    simdir = os.path.join(os.getcwd(), "simulation")
-    particledir = os.path.join(simdir, "particles")
-    plotdir = os.path.join(simdir, "plots")
-
-    if not os.path.exists(simdir):
-        os.mkdir(simdir)
-    if not os.path.exists(particledir):
-        os.mkdir(os.path.join(simdir, "particles"))
-    if not os.path.exists(plotdir):
-        os.mkdir(os.path.join(simdir, "plots"))
-            
-    N = 100           # num of particles
-    eta = 0.1       # noise in [0,1], add noise uniform in [-eta*pi, eta*pi]
-    r = 0.4          # radius
-    delta_t = 0.01   # time step
-
-    # Maximum time
-    t = 0.0
-    T = 1 #was 2.0
-
-    # Generate random particle coordinates
-    # particles[i,0] = x
-    # particles[i,1] = y
-    particles = np.random.uniform(0, 1, size=(N, 2))
-
-    # initialize random angles
-    thetas = np.zeros((N, 1))
-    for i, theta in enumerate(thetas):
-        thetas[i, 0] = rand_angle()
-
-    os.chdir(particledir)
-
     polarisationList = []
 
-    print("Creating particle files", end='', flush=True)
-    # Currently run until time ends
-    while t < T:
+    etas = np.linspace(0,1,50)
+    numberOfSimulations = 50
+    polarisationList = np.linspace(0, 1, numberOfSimulations*etas.size)
+    for etaCount, eta in enumerate(etas):
+        etaSim = eta       # noise in [0,1], add noise uniform in [-eta*pi, eta*pi]
+        for sim in range(numberOfSimulations):
+                    
+            N = 40           # num of particles
+            r = 0.2      # radius
+            delta_t = 0.01   # time step
 
-        print(end='.', flush=True)
-        # save coordinates & corresponding thetas to a text file
-        output = np.concatenate((particles, thetas), axis=1)
-        np.savetxt("%.2f.txt" % t, output)
+            # Maximum time
+            t = 0.0
+            T = 1 #was 2.0
+
+            # Generate random particle coordinates
+            # particles[i,0] = x
+            # particles[i,1] = y
+            particles = np.random.uniform(0, 1, size=(N, 2))
+
+            # initialize random angles
+            thetas = np.zeros((N, 1))
+            for i, theta in enumerate(thetas):
+                thetas[i, 0] = rand_angle()
+
+            polarisation = 0
+
+            # Currently run until time ends
+            while t < T:
+
+                for i, (x, y) in enumerate(particles):
+
+                    # get neighbor indices for current particle
+                    neighbors = get_neighbors(particles, r, x, y)
+
+                    # get average theta angle
+                    avg = get_average(thetas, neighbors)
+
+                    # get noise angle
+                    n_angle = rand_angle()
+
+                    noise = etaSim * n_angle
+
+                    # get new theta
+                    thetas[i] = avg + noise
+
+                    # move to new position 
+                    particles[i,:] += delta_t * angle_2_vector(thetas[i])
+
+                    # assure correct boundaries (xmax, ymax) = (1,1)
+                    if particles[i, 0] < 0:
+                        particles[i, 0] = 1 + particles[i, 0]
+
+                    if particles[i, 0] > 1:
+                        particles[i, 0] = particles[i, 0] - 1
+
+                    if particles[i, 1] < 0:
+                        particles[i, 1] = 1 + particles[i, 1]
+
+                    if particles[i, 1] > 1:
+                        particles[i, 1] = particles[i, 1] - 1
+
+                # Calculate polarisation at last time step
+                if round(t,2) == T-delta_t:
+                    # Remove list within list to calculate polarization
+                    calcThetas = [item for sublist in thetas for item in sublist]
+                    # print(calcThetas)
+                    polarisation = calculatePolarisation(calcThetas, len(particles))
+                    print(f"Polarisation at simulation with eta {etaSim} and {sim} is: {polarisation}")
+                    # new time step
+                t += delta_t
+            polarisationList[etaCount*numberOfSimulations+sim] = polarisation
+            # print(polarisationList)
+
+    etas = etas.repeat(numberOfSimulations)
+    # plt.figure(1)
+    # plt.scatter(etas, polarisationList)
+    # plt.xlabel("\u03B7")
+    # plt.ylabel(f"Number of sharers after {T} time steps")
+    # plt.show()
+    # Plotting
+    plt.figure(2)
+    plt.hist2d(etas, polarisationList, bins=10)
+    plt.xlabel("\u03B7")
+    plt.ylabel(f"Polarisation")
+    plt.title("Phase transition plot of polarisation vs η")
+    plt.colorbar()
 
 
-        for i, (x, y) in enumerate(particles):
+plt.show()
 
-            # get neighbor indices for current particle
-            neighbors = get_neighbors(particles, r, x, y)
+    # print("Processing particles txt files to images", end='', flush=True)
+    # txt_files = [i for i in os.listdir(particledir) if i.endswith(".txt")]
+    # for fname in txt_files:
+    #     print(end = ".", flush=True)
+    #     f = os.path.join(particledir, fname) # the actual file
 
-            # get average theta angle
-            avg = get_average(thetas, neighbors)
-
-            # get noise angle
-            n_angle = rand_angle()
-
-            noise = eta * n_angle
-
-            # get new theta
-            thetas[i] = avg + noise
-
-            # move to new position 
-            particles[i,:] += delta_t * angle_2_vector(thetas[i])
-
-            # assure correct boundaries (xmax, ymax) = (1,1)
-            if particles[i, 0] < 0:
-                particles[i, 0] = 1 + particles[i, 0]
-
-            if particles[i, 0] > 1:
-                particles[i, 0] = particles[i, 0] - 1
-
-            if particles[i, 1] < 0:
-                particles[i, 1] = 1 + particles[i, 1]
-
-            if particles[i, 1] > 1:
-                particles[i, 1] = particles[i, 1] - 1
-
-        # Remove list within list to calculate polarization
-        calcThetas = [item for sublist in thetas for item in sublist]
-        # print(calcThetas)
-        polarisationList.append(calculatePolarisation(calcThetas, len(particles)))
-        # new time step
-        t += delta_t
-    print()
-    print(polarisationList)
-
-    print("Processing particles txt files to images", end='', flush=True)
-    txt_files = [i for i in os.listdir(particledir) if i.endswith(".txt")]
-    for fname in txt_files:
-        print(end = ".", flush=True)
-        f = os.path.join(particledir, fname) # the actual file
-
-        # read in data
-        mat = np.loadtxt(f)
-        coords = mat[:,0:2]
-        thetas = mat[:,2]
-        plot_vectors(coords, thetas)
-        save_plot(plotdir, fname, eta)
-    print()
+    #     # read in data
+    #     mat = np.loadtxt(f)
+    #     coords = mat[:,0:2]
+    #     thetas = mat[:,2]
+    #     plot_vectors(coords, thetas)
+    #     save_plot(plotdir, fname, eta)
+    # print()
     
-    # ------------- make the video ---------------
-    fps=3 #frames per second
+    # # ------------- make the video ---------------
+    # fps=3 #frames per second
 
-    jpg_files = sorted([i for i in os.listdir(plotdir) if i.endswith("jpg")])
-    jpg_files_paths = sorted([os.path.join(plotdir,i) for i in os.listdir(plotdir) if i.endswith("jpg")])
+    # jpg_files = sorted([i for i in os.listdir(plotdir) if i.endswith("jpg")])
+    # jpg_files_paths = sorted([os.path.join(plotdir,i) for i in os.listdir(plotdir) if i.endswith("jpg")])
 
-    video_path = os.path.join(simdir, "spp.mp4")
+    # video_path = os.path.join(simdir, "spp.mp4")
 
-    clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(jpg_files_paths, fps=fps)
-    clip.write_videofile(video_path)
+    # clip = moviepy.video.io.ImageSequenceClip.ImageSequenceClip(jpg_files_paths, fps=fps)
+    # clip.write_videofile(video_path)
