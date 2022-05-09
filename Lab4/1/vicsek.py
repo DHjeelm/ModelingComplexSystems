@@ -175,7 +175,7 @@ if __name__ == '__main__':
         for sim in range(numberOfSimulations):
                     
             N = 40           # num of particles
-            r = 0.2      # radius
+            r = 0.5      # radius
             delta_t = 0.01   # time step
 
             # Maximum time
