@@ -134,22 +134,46 @@ def check_if_any_neighbors(particles, r, x0, y0, i):
     # No neighbor have been found, return false
     return False
 
-def average_nearest_(particles, r, x0, y0, i, size):
-    "Function  calculating the cohesion for an particle"
+def get_closest_particle(particles, r, x0, y0, i):
+    ''' Function returning the distance closest particle'''
+
     # Remove yourself as a neighbor
     checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
-    neighbors = []
+    distances = []
     for j,(x1,y1) in enumerate(checkNeighbors):
 
-        dist = torus_distance(x0, y0, x1, y1, size)
+        distances.append(torus_distance(x0, y0, x1, y1))
 
-        if dist < r:
-            neighbors.append(dist)
-        
-    # Calculate average distance to neighbors (cohesion)
-    cohesion = np.mean(neighbors)
-    return cohesion
+    # Get minimum distance
+    minDistance = min(distances)
 
+    # Return minimum value and index
+    return minDistance
+
+def move_to_average(meanX, meanY, x2, y2):
+    '''Function calculating how to move (x,y) to move closer to average the average of your neighbors'''
+
+    # Difference in x and y axis both regular and torus
+    x_diff = ((meanX - x2), 1 - (meanX - x2))
+    y_diff = ((meanY - y2), 1 - (meanY - y2))
+
+    # Calculate distance
+    x_diffAbs = (abs(meanX - x2), 1 - abs(meanX - x2))
+    y_diffAbs = (abs(meanY - y2), 1 - abs(meanY - y2))
+
+    # Fetch Minimum distance
+    minDistX = min(x_diffAbs)
+    minDistY = min(y_diffAbs)
+
+    # Fetch index of the minimum distance
+    minIndexX= x_diffAbs.index(minDistX)
+    minIndexY= y_diffAbs.index(minDistY)
+
+    # Move in the direction of minimum distance
+    moveX = x_diff[minIndexX]
+    moveY = y_diff[minIndexY]
+    
+    return  moveX, moveY
 
 
 #-------------------------------------------------------------------------
@@ -221,13 +245,13 @@ if __name__ == '__main__':
         os.mkdir(os.path.join(simdir, "plots"))
             
     N = 100           # num of particles
-    eta = 0.2       # noise in [0,1], add noise uniform in [-eta*pi, eta*pi]
-    r = 0.1          # radius
+    eta = 0.1      # noise in [0,1], add noise uniform in [-eta*pi, eta*pi]
+    r = 0.5        # radius
     delta_t = 0.01   # time step
 
     # Maximum time
     t = 0.0
-    T = 2 #was 2.0
+    T = 1 #was 2.0
 
     # Generate random particle coordinates
     # particles[i,0] = x
@@ -243,6 +267,7 @@ if __name__ == '__main__':
 
     print("Creating particle files", end='', flush=True)
     # Currently run until time ends
+    averageNearestNeighborListOuter = []
     while t < T:
 
         print(end='.', flush=True)
@@ -250,7 +275,7 @@ if __name__ == '__main__':
         output = np.concatenate((particles, thetas), axis=1)
         np.savetxt("%.2f.txt" % t, output)
 
-
+        averageNearestNeighborListInner = []
         for i, (x, y) in enumerate(particles):
 
             # If we have any neighbors, move to mean position of the neighboors
@@ -258,9 +283,11 @@ if __name__ == '__main__':
 
                 meanX, meanY = get_average_position(particles, r, x, y, i)
 
+                moveX, moveY = move_to_average(meanX, meanY, x, y)
+
 
                 # Update the theta
-                angle = vector_2_angle((meanX,meanY))
+                angle = vector_2_angle((moveX,moveY))
 
                 # Fetch random angle
                 n_angle = rand_angle()
@@ -281,7 +308,7 @@ if __name__ == '__main__':
                 # Multiply with eta
                 noise = eta * n_angle
 
-                thetas[i] = angle + noise
+                thetas[i] += noise
 
                 # Update position
                 particles[i,:] += delta_t * angle_2_vector(thetas[i])
@@ -300,10 +327,13 @@ if __name__ == '__main__':
             if particles[i, 1] > 1:
                 particles[i, 1] = particles[i, 1] - 1
 
+            averageNearestNeighborListInner.append(get_closest_particle(particles, r, x, y, i))
+
         # new time step
+        averageNearestNeighborListOuter.append(np.mean(averageNearestNeighborListInner))
         t += delta_t
     print()
-
+    print(averageNearestNeighborListOuter)
     print("Processing particles txt files to images", end='', flush=True)
     txt_files = [i for i in os.listdir(particledir) if i.endswith(".txt")]
     for fname in txt_files:
