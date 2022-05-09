@@ -14,28 +14,28 @@ sharer = 1
 bored = 2
 
 # Initiliaze population
+
+
 def initialiazePopulation(N: int):
 
     # Create population
     population = np.zeros((1, N), dtype=int)
 
-
     # Pick two random people
-    randomPeople = random.sample(range(1, N), 800)
+    randomPeople = random.sample(range(1, N), 2)
 
     # Set one to sharing
-    population[0, randomPeople[0]] = 1
+    population[0, randomPeople[0]] = sharer
 
     # And the other one to bored
-    for i in range(1,800):
-        population[0, randomPeople[i]] = 2
-
+    population[0, randomPeople[1]] = bored
 
     return population
 
 
 # Update the state
-def updatePopulation(population, p, q, r):
+def updatePopulation(population: np.ndarray, p, q, r) -> np.ndarray:
+    N = population.size
 
     # Create new state
     newState = copy.deepcopy(population)
@@ -64,7 +64,7 @@ def updatePopulation(population, p, q, r):
             elif population[:, randomPerson] == bored:
                 newState[:, i] = bored
                 continue
-            
+
             # Else the person is sharing and we do nothing
             else:
                 continue
@@ -87,6 +87,7 @@ def updatePopulation(population, p, q, r):
 
 # Plotting
 
+
 # Color maps
 cmap = ListedColormap(["white", "green", "red"])
 resting_patch = mPatches.Patch(color="white", label="Resting")
@@ -94,13 +95,16 @@ sharing_patch = mPatches.Patch(color="green", label="Sharer")
 boring_patch = mPatches.Patch(color="red", label="Bored")
 
 # Function for plotting
+
+
 def plotPopulation(population, title):
-    populationToPlot =  np.zeros((10, 100), dtype=int)
+    populationToPlot = np.zeros((10, 100), dtype=int)
     for i in range(10):
         populationToPlot[i, :] = population[0, i*100:(i+1)*100]
-    plt.figure(1, figsize=(12,8))
+    plt.figure(1, figsize=(12, 8))
     plt.title(title)
-    plt.legend(handles=[boring_patch, sharing_patch, resting_patch], bbox_to_anchor=(0,1), loc="best")
+    plt.legend(handles=[boring_patch, sharing_patch,
+                        resting_patch], bbox_to_anchor=(0, 1), loc="best")
     plt.imshow(populationToPlot, vmin=0, vmax=len(cmap.colors), cmap=cmap)
     plt.yticks(color="w")
     plt.show()
@@ -112,7 +116,6 @@ if __name__ == "__main__":
     N = 1000
     population = initialiazePopulation(N)
     # plotPopulation(population, f"Initial state")
-
 
     # Set simulation parameters:
     p = 0.01
