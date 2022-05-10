@@ -1,5 +1,5 @@
 # Modeling Complex Systems
-Course repo for the course Modelling Complex Systems \\
+Course repo for the course Modelling Complex Systems <br />
 Daniel Hjelm and Emanuel Wreeby
 
 # Lab 1
