@@ -11,24 +11,20 @@ from itertools import repeat
 import ctypes
 
 
-N = 1000
-T = 4000
-nSimulations = 20
-
-p = .001
+q = .01
 r = .01
+N = 1000
+T = 2000
 
-qs = np.linspace(0, .1, 40)
 
-progress = 0
+nSimulations = 20
 
 
 def worker(data: list, resultToWrite):
-    
 
     for info in data:
         i = info[0]
-        q = info[1]
+        p = info[1]
         for j in range(nSimulations):
 
             population = initialiazePopulation(N)
@@ -40,7 +36,7 @@ def worker(data: list, resultToWrite):
             resultToWrite[i * nSimulations + j] = nSharers
 
         progress = np.sum(np.array(resultToWrite) >= 0) / len(resultToWrite)
-        print(f"{progress * 100}% done")                                             
+        print(f"{progress * 100}% done")
 
         sys.stdout.flush()
 
@@ -64,15 +60,20 @@ def split(a, n):
 
 
 if __name__ == "__main__":
-    nProcesses = multiprocessing.cpu_count()
+
+    ps = np.linspace(0, .001, 40)
+
+    progress = 0
+
+    nProcesses = multiprocessing.cpu_count() // 2
     print(f"Starting process with {nProcesses} workers")
     start = time.time()
     preparedResult = -1 * np.ones(
-        (nSimulations * qs.size), dtype=ctypes.c_int)
+        (nSimulations * ps.size), dtype=ctypes.c_int)
     shared_array = to_shared_array(preparedResult, ctype=ctypes.c_int)
     result = to_numpy_array(shared_array, preparedResult.shape)
 
-    work = split(list(enumerate(qs)), nProcesses)
+    work = split(list(enumerate(ps)), nProcesses)
     processes = []
 
     for process in range(nProcesses):
@@ -98,24 +99,24 @@ if __name__ == "__main__":
         #     progress = (i * nSimulations + j) / result.size
         #     print(f"{progress}% done")
 
-    qs = qs.repeat(nSimulations)
-    print(qs.shape)
+    ps = ps.repeat(nSimulations)
+    print(ps.shape)
     print(result.shape)
 
     stop = time.time()
     print(f"Execution time: {stop - start} seconds")
 
     plt.figure(1)
-    plt.scatter(qs, result)
+    plt.scatter(ps, result)
     plt.xlabel("value of q")
     plt.ylabel(f"Number of sharers after {T} time steps")
-    plt.savefig("Scatter.png")
+    plt.savefig("Scatter_p.png")
 
     plt.figure(2)
-    plt.hist2d(qs, result, bins=10)
-    plt.xlabel("value of q")
+    plt.hist2d(ps, result, bins=10)
+    plt.xlabel("value of p")
     plt.ylabel(f"Number of sharers after {T} time steps")
     plt.colorbar()
-    plt.savefig("Heatmap.png")
+    plt.savefig("Heatmap_p.png")
 
     plt.show()
