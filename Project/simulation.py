@@ -13,7 +13,7 @@ from measures import *
 import pylab as pl
 
 
-def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed):
+def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed, timeStep):
 
     # Get closest neighbors distance and indices
     minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i, size)
@@ -107,7 +107,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
     return eaten
 
 
-def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size, preySpeed):
+def preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed, timeStep):
 
     # Get neighboring prey indices for current particle
     neighbors = getNeighbors(particles[:-numberOfPredators], rPrey, x, y, size)
@@ -120,7 +120,7 @@ def preyMovement(particles, thetas, eta, rPrey, x, y, i, numberOfPredators, size
 
     # Get noise angle
     n_angle = randomAngle()
-    noise = eta * n_angle
+    noise = etaPrey * n_angle
 
     # Update theta
     thetas[i] = avg + noise
@@ -173,13 +173,13 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
     numberOfEaten = 0
 
 
-    print("Creating particle files", end='', flush=True)
+    # print("Creating particle files", end='', flush=True)
     # Start the simulation
     t = 0
 
     while t < endTime:
 
-        print(end='.', flush=True)
+        # print(end='.', flush=True)
 
         # Save coordinates & corresponding thetas to a text file
         simulation = np.concatenate((particles, thetas), axis=1)
@@ -190,11 +190,11 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
             # Predator
             if i >= numberOfParticles-numberOfPredators:
-                eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed)
+                eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed, timeStep)
                 numberOfEaten += eaten
             # Prey
             else:
-                preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed)
+                preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed, timeStep)
 
 
             # Assure correct boundaries
@@ -340,7 +340,7 @@ def makeVideo(plotDir):
     out.release()
 
 
-def plotModelWithoutSaving(size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed):
+def plotModelWithoutSaving(particleDir, size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed):
     # Read text files
     txtFiles = [i for i in os.listdir(particleDir) if i.endswith(".txt")]
 
@@ -424,7 +424,7 @@ if __name__ == '__main__':
 
     # Speed
     preySpeed = 1
-    predSpeed = 2
+    predSpeed = 10
 
     # Time settings
     t = 0.0
@@ -435,7 +435,7 @@ if __name__ == '__main__':
     # Simulate model
     polarisation, eaten = simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, timeStep, endTime, size, preySpeed, predSpeed)
     print(eaten)
-    plotModelWithoutSaving(size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed)
+    plotModelWithoutSaving(particleDir, size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed)
     # print(numberOfEaten)
 
     # # print(polarisation)
