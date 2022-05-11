@@ -138,16 +138,31 @@ def calculateNumberOfSharersNetwork(network):
                 numberOfSharers += 1
     return numberOfSharers
 
+def calculateNumberOfRestingNetwork(network):
+    numberOfResting = 0
+    for node in network.nodes.data():       
+            if  node[1]["value"] == resting:
+                numberOfResting += 1
+    return numberOfResting
+
+def calculateNumberOfBoredNetwork(network):
+    numberOfBored = 0
+    for node in network.nodes.data():       
+            if  node[1]["value"] == bored:
+                numberOfBored += 1
+    return numberOfBored
+
 if __name__ == "__main__":
 
     # Network 
     network = initializeNetwork(G)
     plotNetwork(network, "Initial state of network")
+    print(nx.info(network))
 
     # Set simulation parameters:
-    p = 0.01
-    q = 0.1
-    r = 0.1
+    p = 0.001
+    q = 0.5
+    r = 0.01
    
     numberOfSimulations = 10
     numberOfSteps = 500
@@ -162,7 +177,7 @@ if __name__ == "__main__":
         network = updateNetwork(network, p, q, r)
         plt.close()
         plotNetwork(network, f"Network at iteration {j+1}")
-        print(calculateNumberOfSharersNetwork(network))
+        # print(calculateNumberOfSharersNetwork(network))
         plt.show()
         plt.pause(0.01)
     

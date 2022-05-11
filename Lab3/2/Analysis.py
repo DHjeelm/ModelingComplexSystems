@@ -53,7 +53,7 @@ def averageNumberOfSharers():
     q = 0.5
     r = 0.01
    
-    numberOfSimulations = 50
+    numberOfSimulations = 10
     numberOfSteps = 500
 
     numberOfSharersMatrixLattice = np.zeros((numberOfSimulations, numberOfSteps))

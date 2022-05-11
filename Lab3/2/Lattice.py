@@ -147,6 +147,21 @@ def calculateNumberOfSharersLattice(population):
                 numberOfSharers += 1
     return numberOfSharers
 
+def calculateNumberOfRestingLattice(population):
+    numberOfResting = 0
+    for i in range(len(population)):
+        for j in range(len(population)):
+            if population[i,j] == resting:
+                numberOfResting += 1
+    return numberOfResting
+
+def calculateNumberOfBoredLattice(population):
+    numberOfBored = 0
+    for i in range(len(population)):
+        for j in range(len(population)):
+            if population[i,j] == bored:
+                numberOfBored += 1
+    return numberOfBored
 
     
 
@@ -160,11 +175,11 @@ if __name__ == "__main__":
 
 
     # Set simulation parameters:
-    p = 0.01
-    q = 0.1
-    r = 0.1
+    p = 0.001
+    q = 0.5
+    r = 0.01
     numberOfSimulations = 10
-    numberOfSteps = 100
+    numberOfSteps = 1000
 
     numberOfSharersMatrix = np.zeros((numberOfSimulations, numberOfSteps))
 
