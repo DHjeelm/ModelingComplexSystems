@@ -93,8 +93,8 @@ def numberOfBored():
 
     plt.figure(4)
     plt.hist2d(pVector, numberOfBoredListNetwork, bins=10)
-    plt.xlabel("q")
-    plt.ylabel(f"Number of resting (%)")
+    plt.xlabel("p")
+    plt.ylabel(f"Number of bored (%)")
     plt.title("Phase transition plot of number of bored vs p")
     plt.colorbar()
     plt.show()
