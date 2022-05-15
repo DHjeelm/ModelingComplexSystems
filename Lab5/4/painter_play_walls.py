@@ -30,7 +30,7 @@ import math
 
 
 
-def painter_play(rules,room, randomIndices):
+def painter_play_walls(rules,room, randomIndices):
   #returns score, xpos, ypos
 
   M, N = room.shape
@@ -48,8 +48,8 @@ def painter_play(rules,room, randomIndices):
       env[i][j]=0
 
   # Add furniture
-  # for idx in randomIndices:
-  #       env[idx[0], idx[1]] = 1
+  for idx in randomIndices:
+        env[idx[0], idx[1]] = 1
 
   plotEnv = env.copy()
 
