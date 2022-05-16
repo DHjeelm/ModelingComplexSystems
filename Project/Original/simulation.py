@@ -16,14 +16,26 @@ import pylab as pl
 
 def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed, timeStep, predators):
 
-    # Get closest neighbors distance and indices
-    minIndex, minDistance = getClosestNeighbor(particles, rPredator, x, y, i, size)
+    # Get neighbors distance and indices
+    neighbors = getClosestNeighbor(particles, rPredator, x, y, i, size)
+
+    # Sort the neighbors in ascending distance order
+    sortedNeighbors = {k: v for k, v in sorted(neighbors.items(), key=lambda item: item[1])}
+    # print(sortedNeighbors)
+
+    for key, value in sortedNeighbors.items():
+        if key in predators:
+            continue
+        else:
+            minIndex = key
+            minDistance = value
+            break
 
 
     #  Rules for eating
     eaten = 0
     # Eat prey if it is inside rEat
-    if minDistance < rEat and minIndex not in predators:
+    if minDistance < rEat and minIndex:
         # Update number of eaten
         eaten = 1
         
@@ -44,7 +56,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
 
     # Else hunt the closest particle 
-    elif minIndex not in predators:
+    elif minDistance <= rPredator:
 
         # Find neighbor coords
         neighborX, neighborY = particles[minIndex,:]
@@ -69,7 +81,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         # Update predator position
         particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
     
-    # If non prey inside rPredator, move randomly
+    # If no prey inside rPredator, move randomly
     else: 
 
         # print("I can't find no neighbors, lets move randomly")

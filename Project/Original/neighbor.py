@@ -11,22 +11,22 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
 
     # Remove yourself as a neighbor
     checkNeighbors = [x for l,x in enumerate(particles) if l!=i] 
-    neighbors = []
+    neighbors = {}
     for j,(x1,y1) in enumerate(checkNeighbors):
 
         dist = torusDistance(x0, y0, x1, y1, size)
 
         if dist < r:
-            neighbors.append(dist)
+            neighbors[j] = dist
         else:
-            neighbors.append(float('inf'))
+            neighbors[j] = float('inf')
         
-    # Get minimum value and index
-    minDistance = min(neighbors)
-    minIndex = neighbors.index(minDistance)
+    # # Get minimum value and index
+    # minDistance = min(neighbors)
+    # minIndex = neighbors.index(minDistance)
 
     # Return minimum value and index
-    return minIndex, minDistance
+    return neighbors
 
 
 def getNeighbors(particles, r, x0, y0, size):
