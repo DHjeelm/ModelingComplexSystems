@@ -60,28 +60,7 @@ def torusDistance(x1, y1, x2, y2, size):
 
 def predatorSense(x1, y1, x2, y2, size):
 
-    # # Difference in x and y axis both regular and torus
-    # x_diff = ((x1 - x2), size - (x1 - x2))
-    # y_diff = ((y1 - y2), size - (y1 - y2))
-
-    # # Calculate distance
-    # x_diffAbs = (abs(x1 - x2), size - abs(x1 - x2))
-    # y_diffAbs = (abs(y1 - y2), size - abs(y1 - y2))
-
-    # # Fetch Minimum distance
-    # minDistX = min(x_diffAbs)
-    # minDistY = min(y_diffAbs)
-
-    # # Fetch index of the minimum distance
-    # minIndexX= x_diffAbs.index(minDistX)
-    # minIndexY= y_diffAbs.index(minDistY)
-
-    # # Move in the direction of minimum distance
-    # moveX = x_diff[minIndexX]
-    # moveY = y_diff[minIndexY]
-
-
-
+    "Function that returns the closest direction from (x1,y1) to (x2,y2)"
     if abs(x1 - x2) < size - abs(x1 - x2):
         moveX = x1 - x2
     else:
@@ -90,6 +69,6 @@ def predatorSense(x1, y1, x2, y2, size):
     if abs(y1 - y2) < size - abs(y1 - y2):
         moveY = y1 - y2
     else:
-        moveX = (y1 - y2) * -1
+        moveY = (y1 - y2) * -1
 
     return moveX, moveY
