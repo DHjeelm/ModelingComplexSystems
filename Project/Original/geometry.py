@@ -80,7 +80,7 @@ def predatorSense(x1, y1, x2, y2, size):
     # moveX = x_diff[minIndexX]
     # moveY = y_diff[minIndexY]
 
-
+    moveX, moveY = 0, 0
 
     if abs(x1 - x2) < size - abs(x1 - x2):
         moveX = x1 - x2
@@ -90,6 +90,6 @@ def predatorSense(x1, y1, x2, y2, size):
     if abs(y1 - y2) < size - abs(y1 - y2):
         moveY = y1 - y2
     else:
-        moveX = (y1 - y2) * -1
+        moveY = (y1 - y2) * -1
 
     return moveX, moveY
