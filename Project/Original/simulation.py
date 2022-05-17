@@ -439,6 +439,7 @@ if __name__ == '__main__':
     # print(eaten)
     plotModelWithoutSaving(particleDir, size, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat, polarisation, eaten, preySpeed, predSpeed)
     # print(numberOfEaten)
+    # 
 
     # # print(polarisation)
 
