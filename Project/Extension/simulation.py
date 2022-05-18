@@ -1,11 +1,13 @@
 # File for runnning a simulation of the model. The setup of the file is inspired by: git@github.com:fskerman/vicsek_model.git
 
 # Imports
+from cmath import isfinite
 import math
 # import cv2, os, sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.fftpack import diff
 # from cv2 import VideoWriter, VideoWriter_fourcc
 from sympy import re
 from geometry import *
@@ -19,10 +21,13 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
     # Get neighbors distance and indices
     neighbors = getClosestNeighbor(particles, rPredator, x, y, i, size)
 
+    # Get neighboring particles indices for current particle
+    nearbyPredators, nearbyPrey = getNeighbors(particles, rPredator, x, y, size, predators, i)
+
     # Sort the neighbors in ascending distance order
     sortedNeighbors = {k: v for k, v in sorted(neighbors.items(), key=lambda item: item[1])}
 
-    
+    minDistance = float("inf")
     for key, value in sortedNeighbors.items():
         # If the neighbor is a predtor, continue
         if key in predators:
@@ -83,6 +88,99 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         # Update predator position
         particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
     
+    elif nearbyPredators:
+
+        # Alignment
+
+        # Get average theta angle
+        avgAngle = getAverage(thetas, nearbyPredators)
+
+     
+        # Cohesion
+        
+        # Get average position of all nearby predators
+        meanX, meanY = getAveragePosition(particles[len(particles)-len(predators):len(particles)], rPredator, x, y, i, size)
+        
+        # Coordinates pointing to mean
+        moveX, moveY = moveToMean(meanX, meanY, x, y, size)
+
+
+        # Calculate angle from coordinates
+        cohesionAngle = vectorToAngle((moveX,moveY))
+
+        # Seperation
+        diff = 0
+        for k in nearbyPredators:
+            # print(k)
+            if k != i:
+                diff += (particles[i,:] - particles[k,:])/torusDistance(particles[i,0], particles[i,1], particles[k,0], particles[k,1],size)
+        
+   
+        diffAngle = vectorToAngle((diff[0],diff[1]))
+
+     
+
+        # Fetch random angle
+        n_angle = randomAngle()
+
+        # Multiply with eta
+        noise = etaPredator * n_angle
+
+        # Update angle
+        thetas[i] = cohesionAngle + avgAngle + diffAngle + noise
+        # thetas[i] = avgAngle + cohesionAngle + diffAngle + noise
+
+        # Update position
+        particles[i,:] += timeStep * angleToVector(thetas[i])
+        # if not isfinite(particles[i,0]) or not isfinite(particles[i,0]):
+        #     print(thetas[i])
+        #     print(particles[i,:])
+
+    # If we have any neighbors, move to mean position of the neighboors
+    
+    # elif (checkIfAnyNeighbors(particles[len(particles)-len(predators):len(particles)], rPredator, x, y, i, size)):
+
+    #     meanX, meanY = getAveragePosition(particles[len(particles)-len(predators):len(particles)-1], rPredator, x, y, i, size)
+
+    #     moveX, moveY = moveToMean(meanX, meanY, x, y, size)
+
+    #     print(meanX, meanY)
+
+
+
+    #     # If distance to close in group, move randomly
+    #     if abs(moveX-meanX) < 0.01 or abs(moveY-meanY) < 0.01:
+    #         print(f"Predator {i}: I move randomly")
+        
+    #         # Fetch random angle
+    #         n_angle = randomAngle()
+
+    #         # Multiply with eta
+    #         noise = etaPredator * n_angle
+
+    #         # Update theta
+    #         thetas[i] += noise
+
+    #         # Move to new position
+    #         particles[i,:] += timeStep * predSpeed *  angleToVector(thetas[i])
+
+    #     # Else move towards average 
+    #     else:
+    #         print(f"Predator {i}: I move towards average")
+    #         # Update the theta
+    #         angle = vectorToAngle((moveX,moveY))
+
+    #         # Fetch random angle
+    #         n_angle = randomAngle()
+
+    #         # Multiply with eta
+    #         noise = etaPredator * n_angle
+
+    #         thetas[i] = angle + noise
+
+    #         # Update position
+    #         particles[i,:] += timeStep * angleToVector(thetas[i])
+    
     # If no prey inside rPredator, move randomly
     else: 
 
@@ -100,7 +198,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         # Move to new position
         particles[i,:] += timeStep * predSpeed *  angleToVector(thetas[i])
     
-
+    
 
 
     return eaten
@@ -134,12 +232,12 @@ def preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, 
         n_angle = randomAngle()
 
         # Multiply with eta
-        noise = etaPredator * n_angle
+        noise = etaPrey * n_angle
 
         thetas[i] = angle + noise
 
         # Update predator position
-        particles[i,:] += timeStep * predSpeed * angleToVector(thetas[i])
+        particles[i,:] += timeStep * preySpeed * angleToVector(thetas[i])
 
     else:
 
@@ -162,7 +260,7 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
     numberOfParticles = numberOfPrey + numberOfPredators
 
 
-    # Debug setting
+    # # Debug setting
     # particles = np.zeros((numberOfParticles, 2))
     # thetas = np.zeros((numberOfParticles, 1))
     # # # Prey
@@ -175,14 +273,19 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
     # # thetas[0,0] = math.pi*3/2
     # # thetas[1,0] = math.pi*3/2
     # # thetas[2,0] = math.pi*3/2
-    # # thetas[0,0] = 0
-    # # thetas[1,0] = 0
-    # # thetas[2,0] = 0
+    # thetas[0,0] = 0
+    # thetas[1,0] = 0
+    # thetas[2,0] = 0
 
     # # Predator
     # particles[3,0] += 0.9
-    # particles[3,1] += 0.5
-    # thetas[3,0] = math.pi
+    # particles[3,1] += 0.4
+    # thetas[3,0] = math.pi*3/2
+    # particles[4,0] += 0.8
+    # particles[4,1] += 0.6
+    # thetas[4,0] = math.pi
+    
+
 
 
     # Real simulation setting
@@ -215,11 +318,14 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
 
         # Update the model
         for i, (x, y) in enumerate(particles):
-
+            
             # Predator
             if i >= numberOfParticles-numberOfPredators:
+                # print(f"{i}")
+                # print(f"At time step: {round(t*100,2)}")
                 eaten = predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, size, predSpeed, timeStep, predators)
                 numberOfEaten += eaten
+                # print()
             # Prey
             else:
                 preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed, timeStep, predators)
@@ -306,7 +412,6 @@ def savePlot(path, fname, etaPrey, etaPredator, size, i):
     plt.cla()
 
     return
-
 def createPlots(particleDir, numberOfPredators, size):
     '''Function that create plots from the txt.files of coordinates and thetas'''
 
@@ -402,7 +507,7 @@ def plotModelWithoutSaving(particleDir, size, numberOfPrey, numberOfPredators, e
         # Plot
         plotModel(coords, thetas, numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, rPredator, rEat)
         plt.title(f"Simulation at time step {i}")
-        textstr = f"Parameters:\nNumber of prey: {numberOfPrey}\netaPrey: {etaPrey}\nrPrey: {rPrey}\nPrey speed: {preySpeed}\nNumber of predators: {numberOfPredators}\netaPredator: {etaPredator}\nrPredator: {rPredator}\nrEat: {rEat}\nPredator speed: {predSpeed}\n\n\n\nMeasurements:\nNumber of eaten prey: {eaten[i]}\nPolarisation: {np.round(polarisation[i],2)}"
+        textstr = f"Parameters:\nNumber of prey: {numberOfPrey}\netaPrey: {etaPrey}\nrPrey: {rPrey}\nPrey speed: {preySpeed}\nNumber of predators: {numberOfPredators}\netaPredator: {etaPredator}\nrPredator: {rPredator}\nrEat: {rEat}\nPredator speed: {predSpeed}\n\n\n\nMeasurements:\nNumber of eaten prey: {eaten[i]}"
         plt.text(0.02, 0.3, textstr, fontsize=10, transform=plt.gcf().transFigure)
         plt.subplots_adjust(left=0.3)
 
@@ -434,17 +539,17 @@ if __name__ == '__main__':
     size = 1
 
     # Number of preys
-    numberOfPrey = 40
+    numberOfPrey = 0
 
     # Number of predators
-    numberOfPredators = 8
+    numberOfPredators = 40
 
     # Eta (randomness factor)
     etaPrey = 0.2
     etaPredator = 0.2
 
     # Visual radius for prey and predator
-    rPrey = 0.2
+    rPrey = 0.5
     rPredator = 0.2
 
     # Eat radius
@@ -461,8 +566,6 @@ if __name__ == '__main__':
 
     # Find indices of all predators
     predators = [i for i in range(numberOfPrey, numberOfPrey+numberOfPredators)]
-    print(predators)
-
 
 
     # Simulate model

@@ -29,21 +29,21 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
     return neighbors
 
 
-def getNeighbors(particles, r, x0, y0, size, predators):
-    ''' Function returning a list of indices for all neighbors. It includes itself as a neighor so it will be included in average '''
+def getNeighbors(particles, r, x0, y0, size, predators, i):
+    ''' Function returning all indices of nearbyPrey and distance and indice of nearby predators'''
 
     nearbyPredators = {}
     nearbyPrey = []
+
     for j,(x1,y1) in enumerate(particles):
-        dist = torusDistance(x0, y0, x1, y1, size)
-
-        if dist <= r and j in predators:
-            nearbyPredators[j] = dist
-        elif dist <= r and j not in predators:
-            nearbyPrey.append(j)
-        else:
-            continue
-
+        if j!= i:
+            dist = torusDistance(x0, y0, x1, y1, size)
+            if dist <= r and j in predators:
+                nearbyPredators[j] = dist
+            elif dist <= r and j not in predators:
+                nearbyPrey.append(j)
+            else:
+                continue
     return nearbyPredators, nearbyPrey
 
 
@@ -62,6 +62,53 @@ def getAverage(thetas, neighbors):
     avgAngle = vectorToAngle(avgVector)
 
     return avgAngle
+
+def checkIfAnyNeighbors(particles, r, x0, y0, i, size):
+    # Remove yourself from the list
+    checkNeighbors = [x for l,x in enumerate(particles) if l!=i]
+
+    # Loop through particles and check if you have any neighbors
+    for j,(x1,y1) in enumerate(checkNeighbors):
+        dist = torusDistance(x0, y0, x1, y1, size)
+
+        if dist < r:
+            # A neighbor have been found, return True
+            return True
+    # No neighbor have been found, return false
+    return False
  
+def getAveragePosition(particles, r, x0, y0, i, size):
+
+    xList = []
+    yList = []
+
+    for j,(x1,y1) in enumerate(particles):
+        if j != i:
+            dist = torusDistance(x0, y0, x1, y1, size)
+
+            # Fetch x and y position of If particle within radius r 
+            if dist <= r:
+                xList.append(x1)
+                yList.append(y1)
+    # Find mean x,y of your neighbors
+    if not xList or not yList:
+        print(xList, yList)
+    meanX = np.mean(xList)
+    meanY = np.mean(yList)
+    return meanX, meanY
 
 
+def moveToMean(meanX, meanY, x2, y2, size):
+
+    "Function that returns the closest direction from (meanX,meanY) to (x2,y2)"
+    if abs(meanX - x2) < size - abs(meanX - x2):
+        moveX = meanX - x2
+    else:
+        moveX = (meanX - x2) * -1
+
+    if abs(meanY - y2) < size - abs(meanY - y2):
+        moveY = meanY - y2
+    else:
+        moveY = (meanY - y2) * -1
+
+    return moveX, moveY
