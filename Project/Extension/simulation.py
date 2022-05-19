@@ -5,6 +5,7 @@ from cmath import isfinite
 import math
 # import cv2, os, sys
 import os
+from turtle import update
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.fftpack import diff
@@ -90,13 +91,11 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
     
     elif nearbyPredators:
 
-        # Alignment
-
+        ##### Alignment ######
         # Get average theta angle
         avgAngle = getAverage(thetas, nearbyPredators)
-
      
-        # Cohesion
+        ####### Cohesion #######
         
         # Get average position of all nearby predators
         meanX, meanY = getAveragePosition(particles[len(particles)-len(predators):len(particles)], rPredator, x, y, i, size)
@@ -104,11 +103,10 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
         # Coordinates pointing to mean
         moveX, moveY = moveToMean(meanX, meanY, x, y, size)
 
-
         # Calculate angle from coordinates
         cohesionAngle = vectorToAngle((moveX,moveY))
 
-        # Seperation
+        ######## Seperation ##########
         diff = 0
         for k in nearbyPredators:
             # print(k)
@@ -118,70 +116,23 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
    
         diffAngle = vectorToAngle((diff[0],diff[1]))
 
-     
-
         # Fetch random angle
         n_angle = randomAngle()
 
         # Multiply with eta
         noise = etaPredator * n_angle
 
-        # Update angle
-        thetas[i] = cohesionAngle + avgAngle + diffAngle + noise
-        # thetas[i] = avgAngle + cohesionAngle + diffAngle + noise
+        # Update angle:
+        updateAngle = (cohesionAngle-thetas[i])*-0.2 + (avgAngle-thetas[i])*-0.2 + (diffAngle-thetas[i])*-0.1 + noise
+
+        thetas[i] += updateAngle
+
 
         # Update position
-        particles[i,:] += timeStep * angleToVector(thetas[i])
-        # if not isfinite(particles[i,0]) or not isfinite(particles[i,0]):
-        #     print(thetas[i])
-        #     print(particles[i,:])
-
-    # If we have any neighbors, move to mean position of the neighboors
-    
-    # elif (checkIfAnyNeighbors(particles[len(particles)-len(predators):len(particles)], rPredator, x, y, i, size)):
-
-    #     meanX, meanY = getAveragePosition(particles[len(particles)-len(predators):len(particles)-1], rPredator, x, y, i, size)
-
-    #     moveX, moveY = moveToMean(meanX, meanY, x, y, size)
-
-    #     print(meanX, meanY)
-
-
-
-    #     # If distance to close in group, move randomly
-    #     if abs(moveX-meanX) < 0.01 or abs(moveY-meanY) < 0.01:
-    #         print(f"Predator {i}: I move randomly")
+        particles[i,:] += timeStep * predSpeed* angleToVector(thetas[i])
         
-    #         # Fetch random angle
-    #         n_angle = randomAngle()
-
-    #         # Multiply with eta
-    #         noise = etaPredator * n_angle
-
-    #         # Update theta
-    #         thetas[i] += noise
-
-    #         # Move to new position
-    #         particles[i,:] += timeStep * predSpeed *  angleToVector(thetas[i])
-
-    #     # Else move towards average 
-    #     else:
-    #         print(f"Predator {i}: I move towards average")
-    #         # Update the theta
-    #         angle = vectorToAngle((moveX,moveY))
-
-    #         # Fetch random angle
-    #         n_angle = randomAngle()
-
-    #         # Multiply with eta
-    #         noise = etaPredator * n_angle
-
-    #         thetas[i] = angle + noise
-
-    #         # Update position
-    #         particles[i,:] += timeStep * angleToVector(thetas[i])
     
-    # If no prey inside rPredator, move randomly
+    # If no prey inside rPredator to hunt or predators to flock with, move randomly
     else: 
 
         # print("I can't find no neighbors, lets move randomly")
@@ -207,7 +158,7 @@ def predatorMovement(particles, thetas, rPredator, rEat, etaPredator, x, y, i, s
 def preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, size, preySpeed, timeStep, predators):
 
     # Get neighboring particles indices for current particle
-    nearbyPredators, nearbyPrey = getNeighbors(particles, rPrey, x, y, size, predators)
+    nearbyPredators, nearbyPrey = getNeighbors(particles, rPrey, x, y, size, predators, i)
 
     # print(f"Nearby predators: {nearbyPredators}")
     # print(f"Nearby prey: {nearbyPrey}")
@@ -222,10 +173,10 @@ def preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, 
         # Find predator coords
         predX, predY = particles[i,:]
 
-        # Find direction to move in using predator sense:
+        # Find direction that predator sense wants to move in:
         moveX, moveY = predatorSense(neighborX, neighborY, predX, predY, size)
 
-        # Update the theta
+        # Update the theta to move in the opposite direction of the predator movement
         angle = vectorToAngle((moveX,moveY)) + math.pi
 
         # Fetch random angle
@@ -234,11 +185,57 @@ def preyMovement(particles, thetas, etaPrey, rPrey, x, y, i, numberOfPredators, 
         # Multiply with eta
         noise = etaPrey * n_angle
 
-        thetas[i] = angle + noise
+        # Update angle:
+        updateAngle = (angle-thetas[i])*0.2
+
+        thetas[i] += updateAngle 
 
         # Update predator position
         particles[i,:] += timeStep * preySpeed * angleToVector(thetas[i])
 
+    elif nearbyPrey:
+
+        ##### Alignment ######
+        # Get average theta angle
+        avgAngle = getAverage(thetas, nearbyPrey)
+     
+        ####### Cohesion #######
+        
+        # Get average position of all nearby predators
+        meanX, meanY = getAveragePosition(particles[0:len(particles)-len(predators)], rPrey, x, y, i, size)
+        
+        # Coordinates pointing to mean
+        moveX, moveY = moveToMean(meanX, meanY, x, y, size)
+
+        # Calculate angle from coordinates
+        cohesionAngle = vectorToAngle((moveX,moveY))
+
+        ######## Seperation ##########
+        diff = 0
+        for k in nearbyPrey:
+            # print(k)
+            if k != i:
+                diff += (particles[i,:] - particles[k,:])/torusDistance(particles[i,0], particles[i,1], particles[k,0], particles[k,1],size)
+        
+   
+        diffAngle = vectorToAngle((diff[0],diff[1]))
+
+        # Fetch random angle
+        n_angle = randomAngle()
+
+        # Multiply with eta
+        noise = etaPredator * n_angle
+
+        # Update angle:
+        updateAngle = (cohesionAngle-thetas[i])*0.2 + (avgAngle-thetas[i])*0.2 + (diffAngle-thetas[i])*0.1 + noise
+
+        thetas[i] += updateAngle
+
+
+        # Update position
+        particles[i,:] += timeStep * preySpeed * angleToVector(thetas[i])
+    
+    # If no predators to escape from or prey to flock with, move randomly
     else:
 
         # Get average theta angle
@@ -270,12 +267,22 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
     # particles[1,1] += 0.45
     # particles[2,0] += 0.1
     # particles[2,1] += 0.4
+    # thetas[0,0] = math.pi
+    # thetas[1,0] = math.pi
+    # thetas[2,0] = math.pi
+
+    # particles[3,0] += 0.6
+    # particles[3,1] += 0.5
+    # particles[4,0] += 0.6
+    # particles[4,1] += 0.45
+    # particles[5,0] += 0.6
+    # particles[5,1] += 0.4
     # # thetas[0,0] = math.pi*3/2
     # # thetas[1,0] = math.pi*3/2
     # # thetas[2,0] = math.pi*3/2
-    # thetas[0,0] = 0
-    # thetas[1,0] = 0
-    # thetas[2,0] = 0
+    # thetas[4,0] = math.pi
+    # thetas[3,0] = math.pi
+    # thetas[5,0] = math.pi
 
     # # Predator
     # particles[3,0] += 0.9
@@ -284,6 +291,14 @@ def simulateModel(numberOfPrey, numberOfPredators, etaPrey, etaPredator, rPrey, 
     # particles[4,0] += 0.8
     # particles[4,1] += 0.6
     # thetas[4,0] = math.pi
+
+    # particles[0,0] += 0.1
+    # particles[0,1] += 0.5
+    # thetas[0,0] = 0
+
+    # particles[1,0] += 0.8
+    # particles[1,1] += 0.5
+    # thetas[1,0] = math.pi
     
 
 
@@ -539,17 +554,17 @@ if __name__ == '__main__':
     size = 1
 
     # Number of preys
-    numberOfPrey = 0
+    numberOfPrey = 40
 
     # Number of predators
-    numberOfPredators = 40
+    numberOfPredators = 10
 
     # Eta (randomness factor)
     etaPrey = 0.2
     etaPredator = 0.2
 
     # Visual radius for prey and predator
-    rPrey = 0.5
+    rPrey = 0.2
     rPredator = 0.2
 
     # Eat radius
@@ -562,7 +577,7 @@ if __name__ == '__main__':
     # Time settings
     t = 0.0
     timeStep = 0.01
-    endTime = 1
+    endTime = 2
 
     # Find indices of all predators
     predators = [i for i in range(numberOfPrey, numberOfPrey+numberOfPredators)]
