@@ -8,9 +8,12 @@ import numpy as np
 
 
 class Prey(Boid):
-    def __init__(self, location: Vector2, heading: Vector2, sightRadius: float64, speed=1, turnSpeed=.3) -> None:
+    def __init__(self, location: Vector2, heading: Vector2, sightRadius: float64, speed=1, turnSpeed=.3, useAlign=True, useCohesion=True, useSeparation=True) -> None:
         super().__init__(location, heading, turnSpeed, speed)
         self.sightRadius = sightRadius
+        self.useAlign = useAlign
+        self.useCohesion = useCohesion
+        self.useSeparation = useSeparation
 
     def move(self, predators: List[Predator], preyPopulation: List['Prey'], timeStep):
 
@@ -51,5 +54,11 @@ class Prey(Boid):
 
                 # print("Aligning")
 
-                self.idealHeading = (
-                    avgLocation - self.location) * .4 + avgHeading * .2 - separation * .01
+                self.idealHeading = Vector2(0, 0)
+                if self.useCohesion:
+                    self.idealHeading += (
+                        avgLocation - self.location) * .4
+                if self.useAlign:
+                    self.idealHeading += avgHeading * .2
+                if self.useSeparation:
+                    self.idealHeading += separation * 0.01

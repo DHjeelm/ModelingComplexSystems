@@ -3,7 +3,7 @@ import math
 from random import random
 
 from numpy import float64
-from simulation import size
+from setup import size
 
 
 class Vector2:
@@ -12,7 +12,7 @@ class Vector2:
         self.y = y
 
     @classmethod
-    def initRandom_normalized(cls):
+    def initRandom_normalized(cls) -> 'Vector2':
         """Initialize and return a normalized vector pointing in a random direction"""
         x = random() - .5
         y = random() - .5

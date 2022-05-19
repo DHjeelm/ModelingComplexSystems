@@ -10,11 +10,12 @@ import math
 
 class Predator(Boid):
 
-    def __init__(self, location: Vector2, heading: Vector2, sightRadius: float64, speed=1, turnSpeed=.5, eatRadius=.03) -> None:
+    def __init__(self, location: Vector2, heading: Vector2, sightRadius: float64, speed=1.5, turnSpeed=.5, eatRadius=.03) -> None:
         super().__init__(location, heading, turnSpeed, speed)
         self.eatenPrey = 0
         self.sightRadius = sightRadius
         self.eatRadius = eatRadius
+        self.avoidPredators = True
 
     def move(self, preyPopulation: List[Boid], predators: List['Predator'], timeStep: float64):
         """Find closest pray and target it. If no pray is found within search radius, avoid predators or randomly move"""
@@ -46,7 +47,7 @@ class Predator(Boid):
             # print(f"Heading towards target: {direction}")
             self.idealHeading = direction
 
-        else:
+        elif self.avoidPredators:
             neighbors = self.getBoidsInSight(population=predators)
             if len(neighbors) > 0:
                 separation = Vector2(0, 0)

@@ -1,7 +1,8 @@
+from setup import *
 from typing import List
 from vector import Vector2
 from numpy import float64
-from simulation import size
+
 import numpy as np
 import math
 
@@ -31,7 +32,7 @@ class Boid:
             self.heading += (self.idealHeading - self.heading) * self.turnSpeed
             self.heading.normalizeSelf()
 
-        self.heading.rotate(np.random.uniform(-math.pi, math.pi) * .05)
+        self.heading.rotate(np.random.uniform(-math.pi, math.pi) * .2)
         self.location += self.heading * self.speed * timeStep
 
     def die(self):
