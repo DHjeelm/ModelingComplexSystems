@@ -11,7 +11,7 @@ import numpy as np
 import sys
 
 
-nSimulations = 1
+nSimulations = 50
 
 
 def worker(threadId: int, flockingSettings: List[bool], resultToWrite):
@@ -107,10 +107,10 @@ def flockBehavior():
     labels = np.array([getTitles(_case)
                        for _case in cases]).repeat(nSimulations)
     print(labels.shape)
-    print(result.shape)
+    # print(result.shape)
 
-    print(labels)
-    print(result)
+    # print(labels)
+    # print(result)
 
     stop = time.time()
     print(f"Execution time: {stop - start} seconds")
@@ -122,6 +122,8 @@ def flockBehavior():
     plt.savefig("Scatter_p.png")
 
     plt.figure(2)
+    plt.xticks(np.array(list(range(nWorkers))).repeat(
+        nSimulations), labels)
     plt.hist2d(np.array(list(range(nWorkers))).repeat(
         nSimulations), result, bins=len(cases))
     plt.xlabel("Flocking behaviour")
