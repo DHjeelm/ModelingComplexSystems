@@ -11,7 +11,7 @@ import numpy as np
 import sys
 
 
-nSimulations = 50
+nSimulations = 1
 
 
 def worker(threadId: int, flockingSettings: List[bool], resultToWrite):
@@ -19,8 +19,9 @@ def worker(threadId: int, flockingSettings: List[bool], resultToWrite):
     for j in range(nSimulations):
 
         simulation = Simulation(nPrey=50, nPred=3)
-        simulation.simulate(0.01, 5)
         simulation.analysisHelper(flockingSettings)
+        simulation.simulate(0.01, 5)
+
 
         nDeadPrey = simulation.countEatenPrey()
         resultToWrite[threadId * nSimulations + j] = nDeadPrey
@@ -119,7 +120,7 @@ def flockBehavior():
     plt.scatter(labels, result)
     plt.xlabel("Flocking behaviour")
     plt.ylabel(f"Number of eaten prey")
-    plt.savefig("Scatter_p.png")
+    plt.savefig("heatMapEating.png")
 
     plt.figure(2)
     plt.xticks(np.array(list(range(nWorkers))).repeat(
@@ -129,7 +130,7 @@ def flockBehavior():
     plt.xlabel("Flocking behaviour")
     plt.ylabel(f"Number of eaten prey")
     plt.colorbar()
-    plt.savefig("Heatmap_p.png")
+    plt.savefig("scatterEating.png")
 
     plt.show()
 

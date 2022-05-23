@@ -62,3 +62,8 @@ class Prey(Boid):
                     self.idealHeading += avgHeading * .2
                 if self.useSeparation:
                     self.idealHeading += separation * 0.01
+                
+                if self.idealHeading.length() == 0:
+                    self.idealHeading = None
+
+
