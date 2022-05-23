@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import numpy as np
-from sklearn import neighbors
 from geometry import *
 
 # File with functions needed for neighbor calculation of the model. 
@@ -30,21 +29,25 @@ def getClosestNeighbor(particles, r, x0, y0, i, size):
 
 
 def getNeighbors(particles, r, x0, y0, size, predators, i):
-    ''' Function returning all indices of nearbyPrey and distance and indice of nearby predators'''
+    ''' Function returning indices and coords of nearby prey and distance, indices and coords of nearby predators'''
 
     nearbyPredators = {}
     nearbyPrey = []
+    nearbyPredatorsCoords = []
+    nearbyPreyCoords = []
 
     for j,(x1,y1) in enumerate(particles):
         if j!= i:
             dist = torusDistance(x0, y0, x1, y1, size)
             if dist <= r and j in predators:
                 nearbyPredators[j] = dist
+                nearbyPredatorsCoords.append((x1,y1))
             elif dist <= r and j not in predators:
                 nearbyPrey.append(j)
+                nearbyPreyCoords.append((x1,y1))
             else:
                 continue
-    return nearbyPredators, nearbyPrey
+    return nearbyPredators, nearbyPrey, nearbyPredatorsCoords, nearbyPreyCoords
 
 
 def getAverage(thetas, neighbors):
@@ -64,7 +67,7 @@ def getAverage(thetas, neighbors):
     return avgAngle
 
 def checkIfAnyNeighbors(particles, r, x0, y0, i, size):
-    # Remove yourself from the list
+    '''Function checking if there are any particles nearby'''
     checkNeighbors = [x for l,x in enumerate(particles) if l!=i]
 
     # Loop through particles and check if you have any neighbors
@@ -77,19 +80,14 @@ def checkIfAnyNeighbors(particles, r, x0, y0, i, size):
     # No neighbor have been found, return false
     return False
  
-def getAveragePosition(particles, r, x0, y0, i, size):
-
+def getAveragePosition(nearbyParticles, r, x0, y0, i, size):
+    '''Function returning the average position of nearby nearbyParticles'''
     xList = []
     yList = []
 
-    for j,(x1,y1) in enumerate(particles):
-        if j != i:
-            dist = torusDistance(x0, y0, x1, y1, size)
-
-            # Fetch x and y position of If particle within radius r 
-            if dist <= r:
-                xList.append(x1)
-                yList.append(y1)
+    for j,(x1,y1) in enumerate(nearbyParticles):
+        xList.append(x1)
+        yList.append(y1)
     # Find mean x,y of your neighbors
     if not xList or not yList:
         print(xList, yList)
@@ -101,6 +99,7 @@ def getAveragePosition(particles, r, x0, y0, i, size):
 def moveToMean(meanX, meanY, x2, y2, size):
 
     "Function that returns the closest direction from (meanX,meanY) to (x2,y2)"
+
     if abs(meanX - x2) < size - abs(meanX - x2):
         moveX = meanX - x2
     else:
