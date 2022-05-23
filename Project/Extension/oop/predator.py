@@ -17,6 +17,7 @@ class Predator(Boid):
         self.eatRadius = eatRadius
         self.avoidPredators = True
 
+
     def move(self, preyPopulation: List[Boid], predators: List['Predator'], timeStep: float64):
         """Find closest pray and target it. If no pray is found within search radius, avoid predators or randomly move"""
 
@@ -36,7 +37,7 @@ class Predator(Boid):
             if closestDistance < self.eatRadius:
                 closestPrey.die()
                 self.eatenPrey += 1
-                print("Pred ate prey")
+                # print("Pred ate prey")
                 return
 
             # print("Hunting")

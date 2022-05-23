@@ -3,7 +3,7 @@ import math
 from random import random
 
 from numpy import float64
-from setup import size
+from simSetup import size
 
 
 class Vector2:

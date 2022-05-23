@@ -5,7 +5,8 @@ from numpy import float64
 from matplotlib import pyplot as plt
 from typing import List
 from prey import Prey, Predator
-size = 1
+from simSetup import size
+from vector import Vector2
 
 
 class Simulation:
@@ -37,7 +38,36 @@ class Simulation:
         pop.speedPrey = 1
         pop.preyPopulation = []
         pop.predators = []
-        return cls
+        return pop
+
+    def analysisHelper(self, values: List[bool]):
+
+        if 1 in values:
+            self.setPreyAlign(True)
+        else:
+            self.setPreyAlign(False)
+
+        if 2 in values:
+            self.setPreyCohesion(True)
+        else:
+            self.setPreyCohesion(False)
+
+        if 3 in values:
+            self.setPreySeparation(True)
+        else:
+            self.setPreySeparation(False)
+
+    def setPreyAlign(self, value: bool):
+        for prey in self.preyPopulation:
+            prey.useAlign = value
+
+    def setPreyCohesion(self, value: bool):
+        for prey in self.preyPopulation:
+            prey.useCohesion = value
+
+    def setPreySeparation(self, value: bool):
+        for prey in self.preyPopulation:
+            prey.useSeparation = value
 
     def initDebug(self):
         self.nPrey = 1
@@ -46,7 +76,7 @@ class Simulation:
         self.rPred = .2
         self.speedPred = 2
         self.speedPrey = 1
-        self.preyPopulation: List[Boid] = [Prey(heading=Vector2.initRandom_normalized(),
+        self.preyPopulation: List[Prey] = [Prey(heading=Vector2.initRandom_normalized(),
                                                 location=Vector2.initRandom(), sightRadius=self.rPrey, speed=self.speedPrey)]
         self.predators = [Predator(
             heading=Vector2(-1, 0), location=Vector2(.7, .5), sightRadius=self.rPred, speed=self.speedPred)]
@@ -135,6 +165,6 @@ if __name__ == "__main__":
     # simulation.initDebug()
 
     simulation.simulate(timeStep=.01, duration=4,
-                        showProgress=False, awaitWindowClose=False)
+                        showProgress=True, awaitWindowClose=False)
 
     print(simulation.countEatenPrey())

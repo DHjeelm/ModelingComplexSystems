@@ -1,7 +1,8 @@
-from setup import *
+
 from typing import List
 from vector import Vector2
 from numpy import float64
+from simSetup import size
 
 import numpy as np
 import math
