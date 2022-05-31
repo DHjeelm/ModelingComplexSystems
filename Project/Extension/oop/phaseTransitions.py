@@ -11,7 +11,7 @@ import numpy as np
 import sys
 
 
-nSimulations = 1
+nSimulations = 20
 
 
 def worker(threadId: int, flockingSettings: List[bool], resultToWrite):
@@ -21,7 +21,6 @@ def worker(threadId: int, flockingSettings: List[bool], resultToWrite):
         simulation = Simulation(nPrey=50, nPred=3)
         simulation.analysisHelper(flockingSettings)
         simulation.simulate(0.01, 5)
-
 
         nDeadPrey = simulation.countEatenPrey()
         resultToWrite[threadId * nSimulations + j] = nDeadPrey
@@ -62,6 +61,9 @@ def getCombinations(items):
 def getTitles(values):
 
     text = ""
+
+    if 0 in values:
+        text += "Avoid Predators\n"
 
     if 1 in values:
         text += "Align\n"
