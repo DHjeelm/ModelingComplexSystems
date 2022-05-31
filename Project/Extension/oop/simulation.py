@@ -40,8 +40,12 @@ class Simulation:
         pop.predators = []
         return pop
 
-    def analysisHelper(self, values: List[bool]):
+    def analysisHelper(self, values: List[int]):
 
+        if 0 in values:
+            self.setPreyAvoidPred(True)
+        else:
+            self.setPreyAvoidPred(False)
         if 1 in values:
             self.setPreyAlign(True)
         else:
@@ -68,6 +72,10 @@ class Simulation:
     def setPreySeparation(self, value: bool):
         for prey in self.preyPopulation:
             prey.useSeparation = value
+
+    def setPreyAvoidPred(self, value: bool):
+        for prey in self.preyPopulation:
+            prey.avoidPredators = value
 
     def initDebug(self):
         self.nPrey = 1
@@ -163,7 +171,7 @@ if __name__ == "__main__":
     simulation = Simulation(nPred=3, nPrey=50)
 
     # simulation.initDebug()
-
+    simulation.setPreyAvoidPred(False)
     simulation.simulate(timeStep=.01, duration=4,
                         showProgress=True, awaitWindowClose=False)
 
