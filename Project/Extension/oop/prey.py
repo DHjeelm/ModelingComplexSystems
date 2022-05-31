@@ -14,6 +14,7 @@ class Prey(Boid):
         self.useAlign = useAlign
         self.useCohesion = useCohesion
         self.useSeparation = useSeparation
+        self.avoidPredators = True
 
     def move(self, predators: List[Predator], preyPopulation: List['Prey'], timeStep):
 
@@ -62,8 +63,6 @@ class Prey(Boid):
                     self.idealHeading += avgHeading * .2
                 if self.useSeparation:
                     self.idealHeading += separation * 0.01
-                
+
                 if self.idealHeading.length() == 0:
                     self.idealHeading = None
-
-
