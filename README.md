@@ -18,4 +18,4 @@ For Lab 4 all the code is in the Lab4 folder. The code for the assignment 1 (Vis
 For Lab 4 all the code is in the Lab4 folder. The code for the assignment 2 and 3 is in the folder called 2and3. The code for assignment 4 (Custom attraction model) is in folder called 4. 
 
 # Project
-The project code is in divided into two branches. The original model without the extension is on the main branch, in the Project folder. The model with the extension is in the branch called Extension. 
+The project code is available in the Project folder. The original model without the extension is in the folder called Original. The model with extension is the folder called Extension.
